@@ -1,0 +1,5 @@
+I:\SteamLibrary\steamapps\common\sbox\Addons\terrygamevr\code\obj\Debug\net5.0\terrygamevr.csprojAssemblyReference.cache
+I:\SteamLibrary\steamapps\common\sbox\Addons\terrygamevr\code\obj\Debug\net5.0\terrygamevr.GeneratedMSBuildEditorConfig.editorconfig
+I:\SteamLibrary\steamapps\common\sbox\Addons\terrygamevr\code\obj\Debug\net5.0\terrygamevr.AssemblyInfoInputs.cache
+I:\SteamLibrary\steamapps\common\sbox\Addons\terrygamevr\code\obj\Debug\net5.0\terrygamevr.AssemblyInfo.cs
+I:\SteamLibrary\steamapps\common\sbox\Addons\terrygamevr\code\obj\Debug\net5.0\terrygamevr.csproj.CoreCompileInputs.cache

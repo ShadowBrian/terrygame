@@ -1,0 +1,121 @@
+//=========================================================================================================================
+// Optional
+//=========================================================================================================================
+HEADER
+{
+    CompileTargets = ( IS_SM_50 && ( PC || VULKAN ) );
+    Description = "Text drawer";
+    DevShader = true;
+}
+
+//=========================================================================================================================
+// Optional
+//=========================================================================================================================
+FEATURES
+{
+    #include "common/features.hlsl"
+}
+
+MODES
+{
+    VrForward();
+    Depth( "vr_depth_only_nonbindless.vfx" ); 
+
+    ToolsVis( S_MODE_TOOLS_VIS );
+    ToolsWireframe( "vr_tools_wireframe.vfx" );
+}
+
+//=========================================================================================================================
+COMMON
+{
+    #define D_BAKED_LIGHTING_FROM_PROBE 1
+    #define D_HIGH_QUALITY_SHADOWS 1
+    #include "common/shared.hlsl"
+
+}
+
+//=========================================================================================================================
+
+struct VertexInput
+{
+    #include "common/vertexinput.hlsl"
+};
+
+//=========================================================================================================================
+
+struct PixelInput
+{
+    #include "common/pixelinput.hlsl"
+};
+
+//=========================================================================================================================
+
+VS
+{
+    #include "common/vertex.hlsl"
+    //VS_CommonProcessing_Post
+    // Main
+    //
+    PixelInput MainVs( INSTANCED_SHADER_PARAMS( VertexInput i ) )
+    {
+        PixelInput o = ProcessVertex( i );
+        return FinalizeVertex( o );
+    }
+}
+
+//=========================================================================================================================
+
+PS
+{
+    #include "common/pixel.hlsl"
+
+    CreateInputTexture2D( NumberMapTexture, Srgb, 8, "", "",  "Shader Vars,10/10", Default3( 1, 1, 1) );
+    CreateTexture2D( NumbersMap ) < Channel( RGBA, None( NumberMapTexture ), Srgb ); OutputFormat( DXT5 ); SrgbRead( true ); >;
+    TextureAttribute( NumbersMap, NumbersMap );
+
+    uint CurrentNumber< UiType(Slider); Range(0, 9999); Default(0); >;
+    IntAttribute( CurrentNumber, CurrentNumber );
+
+
+    float2 GetRemappedUvs(float2 gUvs, uint number)
+    {
+        int2 dims = TextureDimensions2D( NumbersMap, 0 );
+        float step = 1.0f / (float)dims.x;
+        float stepPerNumber = (float)dims.x / 10.0f;
+
+        gUvs.x /= 9.0f;
+        gUvs.x += (step*((float)number*stepPerNumber));
+
+        return gUvs;
+
+    }
+
+    PixelOutput MainPs( PixelInput i )
+    {
+        Material m = GatherMaterial( i );
+        float2 gridUvs = frac(i.vTextureCoords * float2(4.0f, 1.0f));
+        float gridId = floor(i.vTextureCoords.x * 4.0f);
+        
+        if(gridId == 0) {
+            uint num = floor(CurrentNumber / 1000) % 10;
+            float2 remappedCoords = GetRemappedUvs(gridUvs, num);
+            m.Albedo.rgb += Tex2D(NumbersMap, remappedCoords).xyz * i.vVertexColor.rgb;
+        } else if(gridId == 2) {
+            uint num = floor((CurrentNumber % 1000)/ 10);
+            float2 remappedCoords = GetRemappedUvs(gridUvs, num);
+            m.Albedo.rgb += Tex2D(NumbersMap, remappedCoords).xyz * i.vVertexColor.rgb;
+        } else if(gridId == 3) {
+            uint num = CurrentNumber % 10;
+            float2 remappedCoords = GetRemappedUvs(gridUvs, num);
+            m.Albedo.rgb += Tex2D(NumbersMap, remappedCoords).xyz * i.vVertexColor.rgb;
+        } else if(gridId == 1) {
+            uint num = floor((CurrentNumber / 100) % 100);
+            float2 remappedCoords = GetRemappedUvs(gridUvs, num);
+            m.Albedo.rgb += Tex2D(NumbersMap, remappedCoords).xyz * i.vVertexColor.rgb;
+        }
+
+        PixelOutput o = FinalizePixelMaterial( i, m );
+
+        return o;
+    }
+}

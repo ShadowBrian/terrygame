@@ -1,0 +1,61 @@
+
+@BaseClass = BaseProperties_terrygame
+[
+	parentname(target_destination) [ group="Hierarchy" ] : "Parent" : : "The name of this entity's parent in the movement hierarchy. Entities with parents move with their parent."
+	parentAttachmentName(parentAttachment) [ group="Hierarchy" ] : "Parent Model Bone/Attachment Name" : : "The name of the bone or attachment to attach to on the entity's parent in the movement hierarchy. Use !bonemerge to use bone-merge style attachment."
+
+	useLocalOffset(boolean) [ group="Hierarchy" ] : "Use Model Attachment offsets" : 0 : "Whether to respect the specified local offset when doing the initial hierarchical attachment to its parent."
+	local.origin(vector) [ group="Hierarchy" ] : "Model Attachment position offset" : : "Offset in the local space of the parent model's attachment/bone to use in hierarchy. Not used if you are not using parent attachment."
+	local.angles(angle) [ group="Hierarchy" ] : "Model Attachment angular offset" : : "Angular offset in the local space of the parent model's attachment/bone to use in hierarchy. Not used if you are not using parent attachment."
+	local.scales(vector) [ group="Hierarchy" ] : "Model Attachment scale" : : "Scale in the local space of the parent model's attachment/bone to use in hierarchy. Not used if you are not using parent attachment."
+
+	targetname(target_source) : "Name" : : "The name that other entities refer to this entity by."
+	tags(tags) : "Tags" : "" : "A list of general purpose tags for this entity, for interactions with other entities such as triggers."
+]
+
+//
+// terrygame.GameTimer
+//
+@PointClass base(BaseProperties_terrygame) editormodel( "models/timer.vmdl" ) = terrygame_timer : "Generic Timer"
+[
+	enable_shadows(boolean) { group = "Rendering" } : "Shadow Casting" : 1 : "Whether this entity should cast shadows or not"
+
+	input SetColor(string) : "Sets the color of this entity. Format is '255 255 255 255'."
+]
+
+//
+// terrygame.GlassController
+//
+@PointClass base(BaseProperties_terrygame) editormodel( "models/arrow.vmdl" ) = terrygame_glasscontroller : "Glass bridge game"
+[
+	beginning(vector) : "Beginning pos" :  : ""
+	end(vector) : "Ending pos" :  : ""
+	enable_shadows(boolean) { group = "Rendering" } : "Shadow Casting" : 1 : "Whether this entity should cast shadows or not"
+
+	input StartGameTimer(void) : ""
+	input SetColor(string) : "Sets the color of this entity. Format is '255 255 255 255'."
+]
+
+//
+// terrygame.SquidGuard
+//
+@PointClass base(BaseProperties_terrygame) editormodel( "models/clothes/squidgameguardsuit.vmdl" ) = terrygame_squidguard : "Squid Guard NPC"
+[
+	enable_shadows(boolean) { group = "Rendering" } : "Shadow Casting" : 1 : "Whether this entity should cast shadows or not"
+
+	input SetColor(string) : "Sets the color of this entity. Format is '255 255 255 255'."
+]
+
+//
+// terrygame.TerryBot
+//
+@PointClass base(BaseProperties_terrygame) editormodel( "models/terrybot.vmdl" ) = terrygame_terrybot : "Red/green light game"
+[
+	startlinecenter(vector) : "Start Line Center" :  : ""
+	finishlinecenter(vector) : "Finish Line Center" :  : ""
+	enable_shadows(boolean) { group = "Rendering" } : "Shadow Casting" : 1 : "Whether this entity should cast shadows or not"
+
+	input StartRGLightGame(void) : ""
+	input SetColor(string) : "Sets the color of this entity. Format is '255 255 255 255'."
+]
+
