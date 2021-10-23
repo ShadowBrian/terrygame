@@ -37,6 +37,16 @@
 ]
 
 //
+// terrygame.GlassNumberStatueManager
+//
+@PointClass base(BaseProperties_terrygame) editormodel( "models/arrow.vmdl" ) = terrygame_glassnumbermanager : "Glass bridge game number statue spawner"
+[
+	enable_shadows(boolean) { group = "Rendering" } : "Shadow Casting" : 1 : "Whether this entity should cast shadows or not"
+
+	input SetColor(string) : "Sets the color of this entity. Format is '255 255 255 255'."
+]
+
+//
 // terrygame.SquidGuard
 //
 @PointClass base(BaseProperties_terrygame) editormodel( "models/clothes/squidgameguardsuit.vmdl" ) = terrygame_squidguard : "Squid Guard NPC"
@@ -56,6 +66,18 @@
 	enable_shadows(boolean) { group = "Rendering" } : "Shadow Casting" : 1 : "Whether this entity should cast shadows or not"
 
 	input StartRGLightGame(void) : ""
+	input SetColor(string) : "Sets the color of this entity. Format is '255 255 255 255'."
+]
+
+//
+// terrygame.TugOfWarRopeManager
+//
+@PointClass base(BaseProperties_terrygame) editormodel( "models/tugofwar_rope.vmdl" ) = terrygame_tugofwarrope : "Tug of war rope"
+[
+	beginning(vector) : "Beginning pos" :  : ""
+	end(vector) : "Ending pos" :  : ""
+	enable_shadows(boolean) { group = "Rendering" } : "Shadow Casting" : 1 : "Whether this entity should cast shadows or not"
+
 	input SetColor(string) : "Sets the color of this entity. Format is '255 255 255 255'."
 ]
 

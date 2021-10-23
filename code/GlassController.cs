@@ -25,9 +25,19 @@ namespace terrygame
 
 		Rotation SpawnDirection;
 
-		public override void Spawn()
+		public override void Initialize()
 		{
-			base.Spawn();
+			base.Initialize();
+
+			if( plates.Count > 0)
+			{
+				for ( int i = 0; i < plates.Count; i++ )
+				{
+					plates[i].Delete();
+				}
+				plates.Clear();
+			}
+
 			SpawnDirection = (Beginning - End).EulerAngles.ToRotation();
 
 			PlatesToSpawn = (Game.Current as TerryGame).TotalPlayersAlive;

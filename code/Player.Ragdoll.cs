@@ -45,14 +45,8 @@ namespace terrygame
 
 					var clothing = new ModelEntity();
 					clothing.SetModel( model );
-					//if ( model.Contains( "helmet" ) )
-					//{
-					//	clothing.SetParent( ent, "head" );
-					//}
-					//else
-					//{
-						clothing.SetParent( ent, true );
-					//}
+					clothing.SetParent( ent, true );
+					e.EnableDrawing = false;
 				}
 			}
 

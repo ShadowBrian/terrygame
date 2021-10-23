@@ -58,6 +58,13 @@ namespace terrygame
 				TotalPlayersAlive++;
 			}
 
+			Log.Trace( "Players alive: " + TotalPlayersAlive );
+
+			foreach ( GameTypeBase gameObject in GameAssets )
+			{
+				gameObject.Initialize();
+			}
+
 			player.Respawn();
 		}
 
@@ -152,34 +159,22 @@ namespace terrygame
 
 		bool NextLevelCountdown;
 
-		/// <summary>
-		/// Called each tick.
-		/// Serverside: Called for each client every tick
-		/// Clientside: Called for each tick for local client. Can be called multiple times per tick.
-		/// </summary>
-		public override void Simulate( Client cl )
+		[Event.Tick.Server]
+		void Tick()
 		{
-			if ( !cl.Pawn.IsValid() ) return;
-
-			// Block Simulate from running clientside
-			// if we're not predictable.
-			if ( !cl.Pawn.IsAuthority ) return;
-
-			cl.Pawn.Simulate( cl );
-
-			if ( IsServer )
-			{
+			//if ( IsServer )
+			//{
 				if ( StartedCountdown )
 				{
 					SecondsLeft -= Time.Delta;
 
-					if ( SecondsLeft <= 0f && SecondsLeft > -1f)
+					if ( SecondsLeft <= 0f && SecondsLeft > -1f )
 					{
 
 						SecondsLeft = 0f;
 						StartedCountdown = false;
 						NextLevelCountdown = true;
-						
+
 					}
 				}
 
@@ -197,10 +192,36 @@ namespace terrygame
 						{
 							SecondsLeft = 9999;
 							Log.Trace( "Ran out of maps to play! Final map ended." );
+							foreach ( Client player in Client.All )
+							{
+								if ( !eliminatedPlayers.Contains( player.Name ) )
+								{
+									Log.Trace( player.Name + " Survived!" );
+								}
+							}
+							NextLevelCountdown = false;
 						}
 					}
 				}
-			}
+			//}
+		}
+
+		/// <summary>
+		/// Called each tick.
+		/// Serverside: Called for each client every tick
+		/// Clientside: Called for each tick for local client. Can be called multiple times per tick.
+		/// </summary>
+		public override void Simulate( Client cl )
+		{
+			if ( !cl.Pawn.IsValid() ) return;
+
+			// Block Simulate from running clientside
+			// if we're not predictable.
+			if ( !cl.Pawn.IsAuthority ) return;
+
+			cl.Pawn.Simulate( cl );
+
+			
 		}
 
 		/// <summary>
@@ -220,6 +241,8 @@ namespace terrygame
 			cl.Pawn?.FrameSimulate( cl );
 		}
 
+		List<GameTypeBase> GameAssets = new List<GameTypeBase>();
+
 		/// <summary>
 		/// Called right after the level is loaded and all entities are spawned.
 		/// </summary>
@@ -235,6 +258,8 @@ namespace terrygame
 					continue;
 				}
 
+				GameAssets.Add( ent as GameTypeBase );
+
 				if(ent is TerryBot )
 				{
 					gameType = GameTypes.RGLight;
@@ -245,6 +270,12 @@ namespace terrygame
 				{
 					gameType = GameTypes.GlassBridge;
 					Log.Trace( "Found GlassController! Setting gametype to " + gameType.ToString() );
+				}
+
+				if ( ent is TugOfWarRopeManager )
+				{
+					gameType = GameTypes.TugOfWar;
+					Log.Trace( "Found TugOfWarRopeManager! Setting gametype to " + gameType.ToString() );
 				}
 
 				/*if (ent is GameTimer )

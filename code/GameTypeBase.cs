@@ -9,6 +9,9 @@ namespace terrygame
 {
 	public partial class GameTypeBase : AnimEntity
 	{
+		public virtual void Initialize()
+		{
 
+		}
 	}
 }

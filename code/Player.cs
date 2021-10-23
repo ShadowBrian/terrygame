@@ -1,3 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using Sandbox;
 
 
@@ -5,11 +10,16 @@ namespace terrygame
 {
 	partial class SquidPlayer : Player
 	{
-		ModelEntity suit, feet, bottom, hat;
+		[Net]
+		ModelEntity suit { get; set; }
+		ModelEntity feet, bottom, hat;
 
 		Clothing.Container clothes = new();
 
 		public Vector3 headpos;
+
+		[Net]
+		public bool hasNumber { get; set; }
 
 		[Net, Predicted]
 		AnimEntity LH { get; set; }
@@ -127,18 +137,30 @@ namespace terrygame
 				feet.EnableShadowInFirstPerson = true;
 				feet.EnableHideInFirstPerson = true;
 
-				
+				//suit = new ModelEntity();
+				//suit.SetModel( "models/clothes/glassbridge_numberjacket.vmdl" );
+				//suit.Tags.Add( "suit" );
+				//suit.SetParent( this, true );
+				//suit.EnableShadowInFirstPerson = true;
+				//suit.EnableHideInFirstPerson = true;
+
 
 				clothes.LoadFromClient(Client);
+
+				List<Clothing> yeetclothes = new List<Clothing>();
 
 				for ( int i = 0; i < clothes.Clothing.Count; i++ )
 				{
 					if ( clothes.Clothing[i].Category == Clothing.ClothingCategory.Bottoms || clothes.Clothing[i].Category == Clothing.ClothingCategory.Footwear || clothes.Clothing[i].Category == Clothing.ClothingCategory.Tops )
 					{
-						clothes.Clothing[i] = new Clothing();
+						yeetclothes.Add(clothes.Clothing[i]);
 					}
 				}
 
+				foreach ( var item in yeetclothes )
+				{
+					clothes.Clothing.Remove( item );
+				}
 
 				clothes.DressEntity( this );
 				
@@ -353,18 +375,12 @@ namespace terrygame
 
 					foreach ( Entity ent in client.Children )
 					{
-						if ( ent.Tags.Has( "suit" ) )
+						if ( ent.Tags.Has( "suit" ) && (ent as ModelEntity).SceneObject != null)
 						{
 							//Log.Trace( "Foundsuit! " + ent.Name );
-							suit = (ModelEntity)ent;
+							(ent as ModelEntity).SceneObject.SetValue( "pnum", client.Owner.NetworkIdent );
 							break;
 						}
-
-
-					}
-					if ( suit != null && client.Owner != null )
-					{
-						suit.SceneObject.SetValue( "pnum", client.Owner.NetworkIdent );
 					}
 				}
 				if ( TerryPuppet != null && LH != null && RH != null )
