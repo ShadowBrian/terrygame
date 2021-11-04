@@ -8,20 +8,25 @@ using System.Threading.Tasks;
 
 namespace Sandbox
 {
-	public class StandardPlayerAnimatorVR : StandardPlayerAnimator
+	public partial class StandardPlayerAnimatorVR : StandardPlayerAnimator
 	{
 		TimeSince TimeSinceFootShuffle = 60;
 
 
 		float duck;
 		Vector2 RightJoy;
-		bool JustRotated;
+
+		[Net, Predicted]
+		bool JustRotated { get; set; }
 
 		public Angles PlayerRot;
 
 		public AnimEntity TerryPuppet;
 
-		Vector3 OldHeadPos, NewHeadPos;
+		[Net]
+		Vector3 OldHeadPos { get; set; }
+
+		Vector3 NewHeadPos;
 
 		/// <summary>
 		/// Sets the param on the animgraph
@@ -68,14 +73,21 @@ namespace Sandbox
 			DoRotation( idealRotation );
 		}
 
+		int RotatedTick;
+
 		public void HandleRotations()
 		{
 			Transform localHead = Pawn.Transform.ToLocal( Input.VR.Head );
+
 			RightJoy = Input.VR.RightHand.Joystick.Value;
 
-			if ( RightJoy.x > 0.5f && !JustRotated )
-			{
+			//Log.Trace( RightJoy );
 
+			
+
+			if ( RightJoy.x > 0.5f && !JustRotated && MathF.Abs(RotatedTick - Time.Tick) > 240)
+			{
+				RotatedTick = Time.Tick;
 				OldHeadPos = localHead.Position * Rotation;
 
 				JustRotated = true;
@@ -83,17 +95,20 @@ namespace Sandbox
 
 			}
 
-			if ( RightJoy.x < -0.5f && !JustRotated )
+			if ( RightJoy.x < -0.5f && !JustRotated && MathF.Abs(RotatedTick - Time.Tick) > 240 )
 			{
+				RotatedTick = Time.Tick;
 				OldHeadPos = localHead.Position * Rotation;
 
 				JustRotated = true;
 				PlayerRot.yaw += 45;
 
+				Log.Trace( "Rotate!" );
 			}
 
 			if ( RightJoy.x < 0.5f && RightJoy.x > -0.5f && JustRotated )
 			{
+				RotatedTick = 0;
 				JustRotated = false;
 			}
 
@@ -105,8 +120,8 @@ namespace Sandbox
 
 		public override void Simulate()
 		{
-			
 			HandleRotations();
+
 
 			DoWalk();
 

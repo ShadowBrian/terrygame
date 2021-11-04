@@ -11,7 +11,7 @@ namespace terrygame
 	[Hammer.EditorModel( "models/timer.vmdl" )]
 	partial class GameTimer : GameTypeBase
 	{
-		[Net]
+		[Net,Change]
 		public int time { get; set; }
 
 		public override void Spawn()
@@ -21,6 +21,17 @@ namespace terrygame
 			SetModel( "models/timer.vmdl" );
 			Tags.Add( "timer" );
 
+		}
+
+		public void OntimeChanged()
+		{
+			if(time <= 10 && time > 0 )
+			{
+				Sound snd = Sound.FromWorld( "beep2", Position );
+			}else if(time == 0 )
+			{
+				Sound snd2 = Sound.FromWorld( "beep", Position);
+			}
 		}
 
 		[Event.Tick]

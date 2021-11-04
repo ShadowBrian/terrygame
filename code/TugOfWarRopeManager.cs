@@ -141,7 +141,7 @@ namespace terrygame
 		{
 			if ( !RoundActive )
 			{
-				return;
+				//return;
 			}
 
 			if( PullStrength > 0 )

@@ -2,8 +2,9 @@ using Sandbox;
 
 namespace terrygame
 {
-	public class TerryPup : AnimEntity
+	public partial class TerryPup : AnimEntity
 	{
-
+		[Net]
+		public int PlayerNum { get; set; }
 	}
 }

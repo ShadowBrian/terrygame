@@ -32,7 +32,11 @@ namespace terrygame
 		[Net]
 		public AnimEntity TerryVisual { get; set; }
 
-		TriggerMultiple trigger;
+		[Net, Predicted]
+		public SquidPlayer AssignedPlayer { get; set; }
+
+		[Net]
+		public Clothing.Container clothes { get; set; }
 
 		public override void Spawn()
 		{
@@ -48,8 +52,6 @@ namespace terrygame
 
 			TerryVisual.EnableDrawing = false;
 
-			trigger = new TriggerMultiple();
-
 			startheight = Position.z;
 
 			smoothHeight = startheight;
@@ -60,34 +62,47 @@ namespace terrygame
 			EnableTouch = true;
 		}
 
-		public override void Touch( Entity other )
+		public override void StartTouch( Entity other )
 		{
-			if ( other is SquidPlayer && !(other as SquidPlayer).hasNumber)
+			if ( other is SquidPlayer && !(other as SquidPlayer).hasNumber )
 			{
-				EnableTouch = false;
+				AssignedPlayer = (other as SquidPlayer);
+
+				this.Owner = other.Owner;
+
+				//EnableTouch = false;
 				EnableDrawing = false;
 				TerryVisual.EnableDrawing = true;
-				(other as SquidPlayer).hasNumber = true;
+				AssignedPlayer.hasNumber = true;
 				other.EnableDrawing = false;
-				(other as SquidPlayer).Controller = null;
+
+				CollisionGroup = CollisionGroup.Never;
+
+				oldcontroller = AssignedPlayer.Controller;
+
+				AssignedPlayer.Controller = null;
 
 				if ( (other as SquidPlayer).TerryPuppet != null )
 				{
-					foreach ( var child in (other as SquidPlayer).TerryPuppet.Children )
+					foreach ( var child in AssignedPlayer.TerryPuppet.Children )
 					{
 						if ( child is ModelEntity e )
 						{
 							var model = e.GetModelName();
-							if ( model != null && !model.Contains( "clothes" ) ) // Uck we 're better than this, entity tags, entity type or something?
+							if ( model != null && !model.Contains( "clothes" ) && !model.Contains( "hair" ) && !model.Contains( "hat" ) ) // Uck we 're better than this, entity tags, entity type or something?
 								continue;
 
 							var clothing = new ModelEntity();
 							clothing.SetModel( model );
 							clothing.SetParent( TerryVisual, true );
-							e.EnableDrawing = false;
+
+							clothesCopied.Add( clothing );
 						}
 					}
-					(other as SquidPlayer).TerryPuppet.EnableDrawing = false;
+					AssignedPlayer.TerryPuppet.EnableDrawing = false;
+
+					clothes = (other as SquidPlayer).clothes;
+					clothes.DressEntity( TerryVisual );
 				}
 				else
 				{
@@ -96,33 +111,158 @@ namespace terrygame
 						if ( child is ModelEntity e )
 						{
 							var model = e.GetModelName();
-							if ( model != null && !model.Contains( "clothes" ) ) // Uck we 're better than this, entity tags, entity type or something?
+							if ( model != null && !model.Contains( "clothes" ) && !model.Contains( "hair" ) && !model.Contains( "hat" ) ) // Uck we 're better than this, entity tags, entity type or something?
 								continue;
 
 							var clothing = new ModelEntity();
 							clothing.SetModel( model );
 							clothing.SetParent( TerryVisual, true );
-							e.EnableDrawing = false;
+
+							clothesCopied.Add( clothing );
 						}
 					}
-				}
 
+					clothes = (other as SquidPlayer).clothes;
+
+					clothes.DressEntity( TerryVisual );
+
+				}
 			}
 
 			base.Touch( other );
 
 		}
 
+		float Accuracy;
+		bool CheckingInput;
+		bool FlipValue;
 
+		[Event.Tick.Client]
+		public void TickClient()
+		{
+			if(AssignedPlayer != null )
+			{
+				AssignedPlayer.Position = Position;
+
+				DebugOverlay.Text( Position, "Accuracy: " + Accuracy);
+				if ( CheckingInput )
+				{
+					Accuracy += Time.Delta * 100f * (FlipValue?-1:1);
+					if(Accuracy >= 100f )
+					{
+						FlipValue = true;
+					}
+
+					if(Accuracy <= 0f )
+					{
+						FlipValue = false;
+					}
+				}
+
+				if ( Input.Pressed( InputButton.Jump ) )
+				{
+					CheckingInput = !CheckingInput;
+				}
+
+				if ( Input.Pressed( InputButton.Menu ) )
+				{
+					//AssignedPlayer.EnableDrawing = true;
+					//AssignedPlayer.Controller = new WalkController();
+					//AssignedPlayer.Spawn();
+					//UndoAssignedPlayer();
+					ClearAssignedPlayer( this.NetworkIdent );
+				}
+			}
+		}
+
+		List<Entity> clothesCopied = new List<Entity>();
+
+		PawnController oldcontroller;
+
+		public void UndoAssignedPlayer()
+		{
+			//EnableTouch = true;
+			EnableDrawing = true;
+			TerryVisual.EnableDrawing = false;
+			AssignedPlayer.hasNumber = false;
+			AssignedPlayer.EnableDrawing = true;
+			AssignedPlayer.Controller = oldcontroller;
+
+			if ( AssignedPlayer.TerryPuppet != null )
+			{
+				foreach ( var child in AssignedPlayer.TerryPuppet.Children )
+				{
+					if ( child is ModelEntity e )
+					{
+						//var model = e.GetModelName();
+						//if ( model != null && !model.Contains( "clothes" ) ) // Uck we 're better than this, entity tags, entity type or something?
+						//continue;
+
+						e.EnableDrawing = true;
+					}
+				}
+				AssignedPlayer.TerryPuppet.EnableDrawing = true;
+			}
+			else
+			{
+				foreach ( var child in AssignedPlayer.Children )
+				{
+					if ( child is ModelEntity e )
+					{
+						//var model = e.GetModelName();
+						//if ( model != null && !model.Contains( "clothes" ) ) // Uck we 're better than this, entity tags, entity type or something?
+						//continue;
+
+						e.EnableDrawing = true;
+					}
+				}
+			}
+
+			for ( int i = 0; i < clothesCopied.Count; i++ )
+			{
+				clothesCopied[i].Delete();
+			}
+			clothesCopied.Clear();
+
+			clothes.ClearEntities();
+
+			clothes.DressEntity( AssignedPlayer );
+
+			AssignedPlayer = null;
+
+			//Task.DelaySeconds( 1f );
+
+			//EnableTouch = true;
+		}
+
+		public Task ReEnableCollision;
+
+		[ServerCmd]
+		public static void ClearAssignedPlayer( int entname )
+		{
+			(Entity.FindByIndex( entname ) as RopePullTerry).UndoAssignedPlayer();
+		}
 
 		[Event.Tick.Server]
 		public void TickServer( )
 		{
+		
+			if(!AssignedPlayer.IsValid() && TerryVisual.EnableDrawing)
+			{
+				Log.Trace( "Unassigned the player!" );
+				UndoAssignedPlayer( );
+			}
 
-			// = MathF.Cos( Time.Now * 2 );
+			if ( AssignedPlayer != null )
+			{
+				AssignedPlayer.Position = Position;
+			}
+
 			TerryVisual.SetAnimFloat( "move_x", RopeMovement * 15f);
 
 			Trace floortrace = Trace.Ray( Position + Vector3.Up * 31f, Position - Vector3.Up );
+			floortrace.UseHitboxes( false );
+
 			TraceResult result = floortrace.Run();
 			Grounded = result.Hit;
 

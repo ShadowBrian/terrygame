@@ -22,23 +22,23 @@ MODES
     Depth( "vr_depth_only_nonbindless.vfx" ); 
 
     ToolsVis( S_MODE_TOOLS_VIS );
-    ToolsWireframe( "vr_tools_wireframe.vfx" );
+    ToolsWireframe( "vr_tools_wireframe.vfx" ); 
 }
 
 //=========================================================================================================================
 COMMON
 {
-    #define D_BAKED_LIGHTING_FROM_PROBE 1
-    #define D_HIGH_QUALITY_SHADOWS 1
+    //#define D_BAKED_LIGHTING_FROM_PROBE 1
+    //#define D_HIGH_QUALITY_SHADOWS 1
     #include "common/shared.hlsl"
 
 }
-
+ 
 //=========================================================================================================================
 
 struct VertexInput
 {
-    #include "common/vertexinput.hlsl"
+    #include "common/vertexinput.hlsl" 
 };
 
 //=========================================================================================================================
@@ -89,7 +89,7 @@ PS
         return gUvs;
 
     }
-
+ 
     PixelOutput MainPs( PixelInput i )
     {
         Material m = GatherMaterial( i );

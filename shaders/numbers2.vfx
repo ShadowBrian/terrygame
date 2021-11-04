@@ -28,15 +28,15 @@ MODES
 //=========================================================================================================================
 COMMON
 {
-    #define D_BAKED_LIGHTING_FROM_PROBE 1
-    #define D_HIGH_QUALITY_SHADOWS 1
+    //#define D_BAKED_LIGHTING_FROM_PROBE 1
+    //#define D_HIGH_QUALITY_SHADOWS 1
     #include "common/shared.hlsl"
 
 }
 
 //=========================================================================================================================
 
-struct VertexInput
+struct VertexInput 
 {
     #include "common/vertexinput.hlsl"
 };

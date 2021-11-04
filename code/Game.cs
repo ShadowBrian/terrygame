@@ -13,16 +13,17 @@ namespace terrygame
 
 		public enum GameTypes
 		{
-			BasicElimination,
-			RGLight,
-			CookieCut,
-			TugOfWar,
-			Marbles,
-			GlassBridge,
-			Squid
+			BasicElimination,//this automatically sorts into one of the two below.
+			TimedSurvival,//Survive the timer running out- basic obstacle courses?
+			LastManStanding,//Basic last man wins situation.
+			RGLight,//Squid game ripoff.
+			TugOfWar,//Squid game ripoff. Not sure about this one yet... lame gameplay?
+			GlassBridge,//Squid game ripoff.
+			BombTag,//Crab game ripoff, transfer bombs, half the players (rounded down) get bombs.
+			KingOfTheHill,//Crab game ripoff, central point, being inside it means getting points, end of round above average points live.
+			CrownKeeper,//Crab game ripoff, transfer crowns, half the players get crowns, end of round above average points live.
+			ColorPanels //Crab game ripoff, split players up in teams, run around on grey panels, get colored to team, least colored panels gets killed.
 		}
-
-		//List<GameTimer> timers = new List<GameTimer>();
 
 		public bool StartedCountdown;
 
@@ -30,14 +31,19 @@ namespace terrygame
 
 		public List<string> eliminatedPlayers = new List<string>();
 
+		public List<string> playerNumbers = new List<string>();
+
 		[Net]
 		public int TotalPlayersAlive { get; set; }
+
+		[Net]
+		public int TeamCount { get; set; }
 
 		string[] LevelPlaylist;
 
 		int currentMap = 0;
 
-
+		List<AnimEntity> bombs = new List<AnimEntity>();
 
 		public override void ClientJoined( Client client )
 		{
@@ -48,14 +54,57 @@ namespace terrygame
 			client.Pawn = player;
 
 			CheckEliminatedPlayers();
+			CheckPlayerNumbers();
 
-			if ( eliminatedPlayers.Contains( client.Name.ToString() ) )
+			if ( eliminatedPlayers.Contains( client.Name ) )
 			{
 				player.Died = true;
 			}
 			else
 			{
 				TotalPlayersAlive++;
+				if( playerNumbers.Contains( client.Name ) )
+				{
+					player.PlayerNum = playerNumbers.IndexOf( client.Name ) + 1;
+				}
+				else
+				{
+					playerNumbers.Add( client.Name );
+					player.PlayerNum = playerNumbers.IndexOf( client.Name ) + 1;
+					UpdateNumberFile();
+				}
+			}
+
+			if(gameType == GameTypes.ColorPanels )
+			{
+				//if(TeamCount == 0 )
+				//{
+					TeamCount = 4;
+				//}
+
+				/*if(playerNumbers.Count > 0 )
+				{
+					if ( playerNumbers.Count % 4 == 0 && playerNumbers.Count >= 12 )
+					{
+						TeamCount = 4;
+					}
+					if (playerNumbers.Count % 3 == 0)
+					{
+						TeamCount = 3;
+					}
+					if ( playerNumbers.Count % 2 == 0 && playerNumbers.Count <= 10)
+					{
+						TeamCount = 2;
+					}
+				}*/
+
+
+
+				//TeamCount = 4;
+
+				player.TeamsCount = TeamCount;
+
+				player.TeamBased = true;
 			}
 
 			Log.Trace( "Players alive: " + TotalPlayersAlive );
@@ -66,6 +115,33 @@ namespace terrygame
 			}
 
 			player.Respawn();
+
+			//if(client.IsUsingVr)
+
+			if(gameType == GameTypes.BombTag && Rand.Float(0,100f) > 50f && !player.Died)
+			{
+				AnimEntity bombEnt = new AnimEntity();
+				bombEnt.SetModel( "models/bombtag_bomb.vmdl" );
+				bombEnt.SetParent( player, "hand_L" );
+				//bombEnt.Position = Vector3.Zero;
+
+
+				bombEnt.LocalPosition = new Vector3(3f,0,5f);
+
+				bombEnt.LocalRotation = new Angles( 0, 0, -90 ).ToRotation();
+
+
+				//Particles sparks = Particles.Create( "particles/fuse_sparks.vpcf", bombEnt );
+
+				//player.GetAttachment( "hold_R" ).Value.Position;
+				//bombEnt.LocalPosition += bombEnt.Transform.Rotation.Right * 20;
+
+				//bombEnt.Rotation = player.GetAttachment( "hold_L" ).Value.Rotation;
+
+				bombs.Add( bombEnt );
+
+				player.Bomb = bombEnt;
+			}
 		}
 
 		public override void PostCameraSetup( ref CameraSetup camSetup )
@@ -80,16 +156,30 @@ namespace terrygame
 			if ( !eliminatedPlayers.Contains( name ) )
 			{
 				eliminatedPlayers.Add( name );
-				FileSystem.Data.WriteAllText( "Eliminations.txt", String.Join( ",", eliminatedPlayers ) );
+				FileSystem.Data.WriteAllText( "tempfiles/Eliminations.txt", String.Join( ",", eliminatedPlayers ) );
+				Log.Trace( "Player " + name + " #" + (playerNumbers.IndexOf(name) + 1).ToString("000") + " eliminated!" );
 			}
 		}
 
 		public void CheckEliminatedPlayers()
 		{
-			if ( FileSystem.Data.FileExists( "Eliminations.txt" ) )
+			if ( FileSystem.Data.FileExists( "tempfiles/Eliminations.txt" ) )
 			{
-				eliminatedPlayers = FileSystem.Data.ReadAllText( "Eliminations.txt" ).Split(",").ToList();
+				eliminatedPlayers = FileSystem.Data.ReadAllText( "tempfiles/Eliminations.txt" ).Split(",").ToList();
 			}
+		}
+
+		public void CheckPlayerNumbers()
+		{
+			if ( FileSystem.Data.FileExists( "tempfiles/Numbers.txt" ) )
+			{
+				playerNumbers = FileSystem.Data.ReadAllText( "tempfiles/Numbers.txt" ).Split( "," ).ToList();
+			}
+		}
+
+		public void UpdateNumberFile()
+		{
+			FileSystem.Data.WriteAllText( "tempfiles/Numbers.txt", String.Join( ",", playerNumbers ) );
 		}
 
 		public override void Shutdown()
@@ -98,13 +188,17 @@ namespace terrygame
 			{
 				if ( currentMap + 1 >= LevelPlaylist.Length )
 				{
-					if ( FileSystem.Data.FileExists( "CurrentMap.txt" ) )
+					if ( FileSystem.Data.FileExists( "tempfiles/CurrentMap.txt" ) )
 					{
-						FileSystem.Data.DeleteFile( "CurrentMap.txt" );
+						FileSystem.Data.DeleteFile( "tempfiles/CurrentMap.txt" );
 					}
-					if ( FileSystem.Data.FileExists( "Eliminations.txt" ) )
+					if ( FileSystem.Data.FileExists( "tempfiles/Eliminations.txt" ) )
 					{
-						FileSystem.Data.DeleteFile( "Eliminations.txt" );
+						FileSystem.Data.DeleteFile( "tempfiles/Eliminations.txt" );
+					}
+					if ( FileSystem.Data.FileExists( "tempfiles/Numbers.txt" ) )
+					{
+						FileSystem.Data.DeleteFile( "tempfiles/Numbers.txt" );
 					}
 				}
 			}
@@ -121,9 +215,9 @@ namespace terrygame
 
 				Log.Trace( "Playlist loaded: \n" + FileSystem.Data.ReadAllText( "LevelPlaylist.txt" ) );
 
-				if ( FileSystem.Data.FileExists( "CurrentMap.txt" ) ) {
+				if ( FileSystem.Data.FileExists( "tempfiles/CurrentMap.txt" ) ) {
 
-					currentMap = int.Parse( FileSystem.Data.ReadAllText( "CurrentMap.txt" ) );
+					currentMap = int.Parse( FileSystem.Data.ReadAllText( "tempfiles/CurrentMap.txt" ) );
 				}
 				else
 				{
@@ -135,75 +229,101 @@ namespace terrygame
 							break;
 						}
 					}
-					FileSystem.Data.WriteAllText( "CurrentMap.txt", currentMap.ToString() );
+					FileSystem.Data.WriteAllText( "tempfiles/CurrentMap.txt", currentMap.ToString() );
 				}
 			}
 			else
 			{
-				FileSystem.Data.WriteAllText( "LevelPlaylist.txt", "tg_rglight_courtyard,120\ntg_rglight_courtyard,120" );
+				FileSystem.Data.WriteAllText( "LevelPlaylist.txt", "tg_rglight_courtyard,120\ntg_colorpanels,120\ntg_bombtag,60\ntg_glassbridge,120" );
+
+				//tg_colorpanels,120
+				//tg_bombtag,60
+
 				ConfigureLevelPlaylist();
 			}
 		}
 
 		public override void Spawn()
 		{
-			CheckEliminatedPlayers();
-			ConfigureLevelPlaylist();
+			//CheckEliminatedPlayers();
+			//ConfigureLevelPlaylist();
 
-			SecondsLeft = float.Parse(LevelPlaylist[currentMap].Split( "," )[1]);
+			//SecondsLeft = float.Parse(LevelPlaylist[currentMap].Split( "," )[1]);
+
+			if ( IsServer && !Input.VR.IsActive)
+			{
+				new MinimalHudEntity();
+			}
 
 			base.Spawn();
 		}
 
-		float countdownToNextMap = 5f;
+		float countdownToNextMap = 10f;
 
 		bool NextLevelCountdown;
+
+		async Task MakeItRain(Entity player, int count, float Delay = 0.1f )
+		{
+			for ( int i = 0; i <= count; i++ )
+			{
+				await Task.DelaySeconds( Delay );
+				ModelEntity MoneyEnt = new ModelEntity( );
+				MoneyEnt.Position = player.Position + Vector3.Up * 100 + (new Vector3( 1f * Rand.Float( -10f, 10f ), 1f * Rand.Float( -10f, 10f ), 1f * Rand.Float(-10f,10f)));
+				MoneyEnt.Rotation = Rotation.LookAt( player.Position - MoneyEnt.Position );
+				MoneyEnt.SetModel( "models/winner_bill.vmdl" );
+				MoneyEnt.SetupPhysicsFromModel( PhysicsMotionType.Dynamic );
+			}
+		}
 
 		[Event.Tick.Server]
 		void Tick()
 		{
-			//if ( IsServer )
-			//{
-				if ( StartedCountdown )
+			if ( StartedCountdown )
+			{
+				SecondsLeft -= Time.Delta;
+
+				if ( SecondsLeft <= 0f && SecondsLeft > -1f )
 				{
-					SecondsLeft -= Time.Delta;
-
-					if ( SecondsLeft <= 0f && SecondsLeft > -1f )
-					{
-
-						SecondsLeft = 0f;
-						StartedCountdown = false;
-						NextLevelCountdown = true;
-
-					}
+					SecondsLeft = 0f;
+					StartedCountdown = false;
+					NextLevelCountdown = true;
 				}
+			}
 
-				if ( NextLevelCountdown )
+			if(!StartedCountdown && gameType == GameTypes.LastManStanding )
+			{
+				if(TotalPlayersAlive == 1 )
 				{
-					countdownToNextMap -= Time.Delta;
-					if ( countdownToNextMap <= 0f )
+					NextLevelCountdown = true;
+				}
+			}
+
+			if ( NextLevelCountdown )
+			{
+				countdownToNextMap -= Time.Delta;
+				if ( countdownToNextMap <= 0f )
+				{
+					if ( currentMap + 1 < LevelPlaylist.Length )
 					{
-						if ( currentMap + 1 < LevelPlaylist.Length )
+						FileSystem.Data.WriteAllText( "tempfiles/CurrentMap.txt", (currentMap + 1).ToString() );
+						Global.ChangeLevel( LevelPlaylist[currentMap + 1].Split( "," )[0] );
+					}
+					else
+					{
+						SecondsLeft = 9999;
+						Log.Trace( "Ran out of maps to play! Final map ended." );
+						foreach ( Client player in Client.All )
 						{
-							FileSystem.Data.WriteAllText( "CurrentMap.txt", (currentMap + 1).ToString() );
-							Global.ChangeLevel( LevelPlaylist[currentMap + 1].Split( "," )[0] );
-						}
-						else
-						{
-							SecondsLeft = 9999;
-							Log.Trace( "Ran out of maps to play! Final map ended." );
-							foreach ( Client player in Client.All )
+							if ( !eliminatedPlayers.Contains( player.Name ) )
 							{
-								if ( !eliminatedPlayers.Contains( player.Name ) )
-								{
-									Log.Trace( player.Name + " Survived!" );
-								}
+								Log.Trace( player.Name + " Survived!" );
+								MakeItRain( player.Pawn, Client.All.Count * 100 );
 							}
-							NextLevelCountdown = false;
 						}
+						NextLevelCountdown = false;
 					}
 				}
-			//}
+			}
 		}
 
 		/// <summary>
@@ -248,43 +368,56 @@ namespace terrygame
 		/// </summary>
 		public override void PostLevelLoaded()
 		{
+			FileSystem.Data.CreateDirectory( "tempfiles" );
 			CheckEliminatedPlayers();
 			ConfigureLevelPlaylist();
+			CheckPlayerNumbers();
 
-			foreach (Entity ent in Entity.All )
+			SecondsLeft = float.Parse( LevelPlaylist[currentMap].Split( "," )[1] );
+
+			foreach (Entity ent in Entity.All.OfType<GameTypeBase>())
 			{
-				if ( ent is not GameTypeBase)
-				{
-					continue;
-				}
-
 				GameAssets.Add( ent as GameTypeBase );
 
-				if(ent is TerryBot )
+				if ( gameType == GameTypes.BasicElimination )
 				{
-					gameType = GameTypes.RGLight;
-					Log.Trace( "Found Terrybot! Setting gametype to " + gameType.ToString() );
-				}
 
-				if ( ent is GlassController )
-				{
-					gameType = GameTypes.GlassBridge;
-					Log.Trace( "Found GlassController! Setting gametype to " + gameType.ToString() );
-				}
-
-				if ( ent is TugOfWarRopeManager )
-				{
-					gameType = GameTypes.TugOfWar;
-					Log.Trace( "Found TugOfWarRopeManager! Setting gametype to " + gameType.ToString() );
-				}
-
-				/*if (ent is GameTimer )
-				{
-					if ( !timers.Contains( (GameTimer)ent ) )
+					if ( ent is TerryBot )
 					{
-						timers.Add((GameTimer)ent);
+						gameType = GameTypes.RGLight;
+						Log.Trace( "Found Terrybot! Setting gametype to " + gameType.ToString() );
 					}
-				}*/
+
+					if ( ent is GlassController )
+					{
+						gameType = GameTypes.GlassBridge;
+						Log.Trace( "Found GlassController! Setting gametype to " + gameType.ToString() );
+					}
+
+					if ( ent is TugOfWarRopeManager )
+					{
+						gameType = GameTypes.TugOfWar;
+						Log.Trace( "Found TugOfWarRopeManager! Setting gametype to " + gameType.ToString() );
+					}
+
+					if(ent is TimedSurvival )
+					{
+						gameType = GameTypes.TimedSurvival;
+						Log.Trace( "Found TimedSurvival settings! Setting gametype to " + gameType.ToString() );
+					}
+
+					if ( ent is ColorPanelManager )
+					{
+						gameType = GameTypes.ColorPanels;
+						Log.Trace( "Found ColorPanelManager! Setting gametype to " + gameType.ToString() );
+					}
+
+					if ( ent is BombTagManager )
+					{
+						gameType = GameTypes.BombTag;
+						Log.Trace( "Found BombTagManager! Setting gametype to " + gameType.ToString() );
+					}
+				}
 			}
 
 			if(gameType == GameTypes.BasicElimination )
@@ -294,11 +427,13 @@ namespace terrygame
 				{
 					Log.Trace( "No Terry Game Entities found, defaulting to timed survival!" );
 					StartedCountdown = true;
+					gameType = GameTypes.TimedSurvival;
 				}
 				else
 				{
 					Log.Trace( "No Terry Game Entities found, defaulting to last man standing!" );
 					StartedCountdown = false;
+					gameType = GameTypes.LastManStanding;
 				}
 			}
 		}

@@ -22,16 +22,16 @@ namespace terrygame
 			ent.SetInteractsWith( CollisionLayer.WORLD_GEOMETRY );
 			ent.SetInteractsExclude( CollisionLayer.Player | CollisionLayer.Debris );
 
+			ent.SetModel( GetModelName() );
+			ent.CopyBonesFrom( usepuppet ? puppet : this );
+			ent.TakeDecalsFrom( usepuppet ? puppet : this );
+			ent.SetRagdollVelocityFrom( this );
+
 			ent.SetBodyGroup( 0, 0 );
 			ent.SetBodyGroup( 1, 1 );
 			ent.SetBodyGroup( 2, 1 );
 			ent.SetBodyGroup( 3, 0 );
 			ent.SetBodyGroup( 4, 1 );
-
-			ent.SetModel( GetModelName() );
-			ent.CopyBonesFrom( usepuppet ? puppet : this );
-			ent.TakeDecalsFrom( usepuppet ? puppet : this );
-			ent.SetRagdollVelocityFrom( this );
 			//ent.DeleteAsync( 20.0f );
 
 			// Copy the clothes over

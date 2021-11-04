@@ -223,6 +223,38 @@ namespace Sandbox
 		bool IsTouchingLadder = false;
 		Vector3 LadderNormal;
 
+		bool ToggleRun, JustToggled;
+
+
+		public override float GetWishSpeed()
+		{
+			var ws = Duck.GetWishSpeed();
+			if ( ws >= 0 ) return ws;
+
+			if ( Input.VR.LeftHand.JoystickPress )
+			{
+				if ( !JustToggled )
+				{
+					ToggleRun = !ToggleRun;
+					JustToggled = true;
+				}
+			}
+			else
+			{
+				JustToggled = false;
+			}
+
+			if(LeftJoy.Length < 0.1f )
+			{
+				ToggleRun = false;
+			}
+
+			if ( ToggleRun ) return SprintSpeed;
+			if ( Input.Down( InputButton.Walk ) ) return WalkSpeed;
+
+			return DefaultSpeed;
+		}
+
 		public override void CheckLadder()
 		{
 			if ( IsTouchingLadder && Input.VR.RightHand.ButtonA.IsPressed )
@@ -233,7 +265,7 @@ namespace Sandbox
 				return;
 			}
 
-			const float ladderDistance = 1.0f;
+			const float ladderDistance = 5.0f;
 			var start = Position;
 			Vector3 end = start + (IsTouchingLadder ? (LadderNormal * -1.0f) : WishVelocity.Normal) * ladderDistance;
 

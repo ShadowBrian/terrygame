@@ -25,6 +25,17 @@
 						use_global_default = false
 						global_default_material = ""
 					},
+					{
+						_class = "MaterialGroup"
+						name = "teams"
+						remaps = 
+						[
+							{
+								from = "models/clothes/tracksuit_mat.vmat"
+								to = "models/clothes/tracksuit_top_tintable.vmat"
+							},
+						]
+					},
 				]
 			},
 			{

@@ -14,7 +14,7 @@ HEADER
 FEATURES
 {
     #include "common/features.hlsl"
-}
+} 
 
 MODES
 {
@@ -28,8 +28,8 @@ MODES
 //=========================================================================================================================
 COMMON
 {
-    #define D_BAKED_LIGHTING_FROM_PROBE 1
-    #define D_HIGH_QUALITY_SHADOWS 1
+    //#define D_BAKED_LIGHTING_FROM_PROBE 1
+    //#define D_HIGH_QUALITY_SHADOWS 1
     #include "common/shared.hlsl"
 
 }
@@ -39,7 +39,7 @@ COMMON
 struct VertexInput
 {
     #include "common/vertexinput.hlsl"
-};
+}; 
 
 //=========================================================================================================================
 

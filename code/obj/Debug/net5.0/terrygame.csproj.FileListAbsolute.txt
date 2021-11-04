@@ -1,0 +1,14 @@
+I:\SteamLibrary\steamapps\common\sbox\Addons\terrygame\.intermediate\net5.0\terrygame.deps.json
+I:\SteamLibrary\steamapps\common\sbox\Addons\terrygame\.intermediate\net5.0\terrygame.dll
+I:\SteamLibrary\steamapps\common\sbox\Addons\terrygame\.intermediate\net5.0\ref\terrygame.dll
+I:\SteamLibrary\steamapps\common\sbox\Addons\terrygame\.intermediate\net5.0\terrygame.pdb
+I:\SteamLibrary\steamapps\common\sbox\Addons\terrygame\.intermediate\net5.0\terrygame.xml
+I:\SteamLibrary\steamapps\common\sbox\Addons\terrygame\code\obj\Debug\net5.0\terrygame.csprojAssemblyReference.cache
+I:\SteamLibrary\steamapps\common\sbox\Addons\terrygame\code\obj\Debug\net5.0\terrygame.GeneratedMSBuildEditorConfig.editorconfig
+I:\SteamLibrary\steamapps\common\sbox\Addons\terrygame\code\obj\Debug\net5.0\terrygame.AssemblyInfoInputs.cache
+I:\SteamLibrary\steamapps\common\sbox\Addons\terrygame\code\obj\Debug\net5.0\terrygame.AssemblyInfo.cs
+I:\SteamLibrary\steamapps\common\sbox\Addons\terrygame\code\obj\Debug\net5.0\terrygame.csproj.CoreCompileInputs.cache
+I:\SteamLibrary\steamapps\common\sbox\Addons\terrygame\code\obj\Debug\net5.0\terrygame.csproj.CopyComplete
+I:\SteamLibrary\steamapps\common\sbox\Addons\terrygame\code\obj\Debug\net5.0\terrygame.dll
+I:\SteamLibrary\steamapps\common\sbox\Addons\terrygame\code\obj\Debug\net5.0\ref\terrygame.dll
+I:\SteamLibrary\steamapps\common\sbox\Addons\terrygame\code\obj\Debug\net5.0\terrygame.pdb

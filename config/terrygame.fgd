@@ -14,6 +14,36 @@
 ]
 
 //
+// terrygame.BombTagManager
+//
+@PointClass base(BaseProperties_terrygame) editormodel( "models/arrow.vmdl" ) = terrygame_bombtagmanager : "bomb tag game manager"
+[
+	enable_shadows(boolean) { group = "Rendering" } : "Shadow Casting" : 1 : "Whether this entity should cast shadows or not"
+
+	input SetColor(string) : "Sets the color of this entity. Format is '255 255 255 255'."
+]
+
+//
+// terrygame.ColorPanel
+//
+@PointClass base(BaseProperties_terrygame) tags( SupportsSolids ) = terrygame_colorpanel : "Color panel, will tint according to who touched it last"
+[
+	enable_shadows(boolean) { group = "Rendering" } : "Shadow Casting" : 1 : "Whether this entity should cast shadows or not"
+
+	input SetColor(string) : "Sets the color of this entity. Format is '255 255 255 255'."
+]
+
+//
+// terrygame.ColorPanelManager
+//
+@PointClass base(BaseProperties_terrygame) editormodel( "models/arrow.vmdl" ) = terrygame_colorpanelmanager : "color panel game manager"
+[
+	enable_shadows(boolean) { group = "Rendering" } : "Shadow Casting" : 1 : "Whether this entity should cast shadows or not"
+
+	input SetColor(string) : "Sets the color of this entity. Format is '255 255 255 255'."
+]
+
+//
 // terrygame.GameTimer
 //
 @PointClass base(BaseProperties_terrygame) editormodel( "models/timer.vmdl" ) = terrygame_timer : "Generic Timer"
@@ -66,6 +96,19 @@
 	enable_shadows(boolean) { group = "Rendering" } : "Shadow Casting" : 1 : "Whether this entity should cast shadows or not"
 
 	input StartRGLightGame(void) : ""
+	input SetColor(string) : "Sets the color of this entity. Format is '255 255 255 255'."
+]
+
+//
+// terrygame.TimedSurvival
+//
+@PointClass base(BaseProperties_terrygame) editormodel( "models/arrow.vmdl" ) = terrygame_timedsurvival : "Timed survival game settings"
+[
+	start immediately(boolean) : "Start Immediately, if false hook up \"StartGameTimer\" input to a trigger." : 0 : ""
+	forced time limit(float) : "Forced Time Limit, set to 0 to allow playlist-dictated time limits." : 0 : ""
+	enable_shadows(boolean) { group = "Rendering" } : "Shadow Casting" : 1 : "Whether this entity should cast shadows or not"
+
+	input StartGameTimer(void) : ""
 	input SetColor(string) : "Sets the color of this entity. Format is '255 255 255 255'."
 ]
 

@@ -1,0 +1,157 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>terrygame</name>
+    </assembly>
+    <members>
+        <member name="M:terrygame.TerryGame.Simulate(Sandbox.Client)">
+            <summary>
+            Called each tick.
+            Serverside: Called for each client every tick
+            Clientside: Called for each tick for local client. Can be called multiple times per tick.
+            </summary>
+        </member>
+        <member name="M:terrygame.TerryGame.FrameSimulate(Sandbox.Client)">
+            <summary>
+            Called each frame on the client only to simulate things that need to be updated every frame. An example
+            of this would be updating their local pawn's look rotation so it updates smoothly instead of at tick rate.
+            </summary>
+        </member>
+        <member name="M:terrygame.TerryGame.PostLevelLoaded">
+            <summary>
+            Called right after the level is loaded and all entities are spawned.
+            </summary>
+        </member>
+        <member name="M:terrygame.SquidPlayer.OnKilled">
+            <summary>
+            Called once the player's health reaches 0
+            </summary>
+        </member>
+        <member name="M:Sandbox.StandardPlayerAnimatorVR.SetParam(System.String,Vector3)">
+            <summary>
+            Sets the param on the animgraph
+            </summary>
+        </member>
+        <member name="M:Sandbox.StandardPlayerAnimatorVR.SetParam(System.String,System.Single)">
+            <summary>
+            Sets the param on the animgraph
+            </summary>
+        </member>
+        <member name="M:Sandbox.StandardPlayerAnimatorVR.SetParam(System.String,System.Boolean)">
+            <summary>
+            Sets the param on the animgraph
+            </summary>
+        </member>
+        <member name="M:Sandbox.StandardPlayerAnimatorVR.SetParam(System.String,System.Int32)">
+            <summary>
+            Sets the param on the animgraph
+            </summary>
+        </member>
+        <member name="M:Sandbox.WalkControllerFlatNoRun.GetHull">
+            <summary>
+            This is temporary, get the hull size for the player's collision
+            </summary>
+        </member>
+        <member name="M:Sandbox.WalkControllerFlatNoRun.UpdateBBox">
+            <summary>
+            Update the size of the bbox. We should really trigger some shit if this changes.
+            </summary>
+        </member>
+        <member name="M:Sandbox.WalkControllerFlatNoRun.Accelerate(Vector3,System.Single,System.Single,System.Single)">
+            <summary>
+            Add our wish direction and speed onto our velocity
+            </summary>
+        </member>
+        <member name="M:Sandbox.WalkControllerFlatNoRun.ApplyFriction(System.Single)">
+            <summary>
+            Remove ground friction from velocity
+            </summary>
+        </member>
+        <member name="M:Sandbox.WalkControllerFlatNoRun.TraceBBox(Vector3,Vector3,System.Single)">
+            <summary>
+            Traces the current bbox and returns the result.
+            liftFeet will move the start position up by this amount, while keeping the top of the bbox at the same
+            position. This is good when tracing down because you won't be tracing through the ceiling above.
+            </summary>
+        </member>
+        <member name="M:Sandbox.WalkControllerFlatRGLight.GetHull">
+            <summary>
+            This is temporary, get the hull size for the player's collision
+            </summary>
+        </member>
+        <member name="M:Sandbox.WalkControllerFlatRGLight.UpdateBBox">
+            <summary>
+            Update the size of the bbox. We should really trigger some shit if this changes.
+            </summary>
+        </member>
+        <member name="M:Sandbox.WalkControllerFlatRGLight.Accelerate(Vector3,System.Single,System.Single,System.Single)">
+            <summary>
+            Add our wish direction and speed onto our velocity
+            </summary>
+        </member>
+        <member name="M:Sandbox.WalkControllerFlatRGLight.ApplyFriction(System.Single)">
+            <summary>
+            Remove ground friction from velocity
+            </summary>
+        </member>
+        <member name="M:Sandbox.WalkControllerFlatRGLight.TraceBBox(Vector3,Vector3,System.Single)">
+            <summary>
+            Traces the current bbox and returns the result.
+            liftFeet will move the start position up by this amount, while keeping the top of the bbox at the same
+            position. This is good when tracing down because you won't be tracing through the ceiling above.
+            </summary>
+        </member>
+        <member name="M:Sandbox.WalkControllerStairsfix.GetHull">
+            <summary>
+            This is temporary, get the hull size for the player's collision
+            </summary>
+        </member>
+        <member name="M:Sandbox.WalkControllerStairsfix.UpdateBBox">
+            <summary>
+            Update the size of the bbox. We should really trigger some shit if this changes.
+            </summary>
+        </member>
+        <member name="M:Sandbox.WalkControllerStairsfix.Accelerate(Vector3,System.Single,System.Single,System.Single)">
+            <summary>
+            Add our wish direction and speed onto our velocity
+            </summary>
+        </member>
+        <member name="M:Sandbox.WalkControllerStairsfix.ApplyFriction(System.Single)">
+            <summary>
+            Remove ground friction from velocity
+            </summary>
+        </member>
+        <member name="M:Sandbox.WalkControllerStairsfix.UpdateGroundEntity(Sandbox.TraceResult)">
+            <summary>
+            We have a new ground entity
+            </summary>
+        </member>
+        <member name="M:Sandbox.WalkControllerStairsfix.ClearGroundEntity">
+            <summary>
+            We're no longer on the ground, remove it
+            </summary>
+        </member>
+        <member name="M:Sandbox.WalkControllerStairsfix.TraceBBox(Vector3,Vector3,System.Single)">
+            <summary>
+            Traces the current bbox and returns the result.
+            liftFeet will move the start position up by this amount, while keeping the top of the bbox at the same
+            position. This is good when tracing down because you won't be tracing through the ceiling above.
+            </summary>
+        </member>
+        <member name="M:Sandbox.WalkControllerStairsfix.StayOnGround">
+            <summary>
+            Try to keep a walking player on the ground when running down slopes etc
+            </summary>
+        </member>
+        <member name="M:Sandbox.WalkControllerVR.GetHull">
+            <summary>
+            This is temporary, get the hull size for the player's collision
+            </summary>
+        </member>
+        <member name="M:Sandbox.WalkControllerVRRGLight.GetHull">
+            <summary>
+            This is temporary, get the hull size for the player's collision
+            </summary>
+        </member>
+    </members>
+</doc>

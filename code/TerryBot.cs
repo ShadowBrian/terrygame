@@ -26,7 +26,12 @@ namespace terrygame
 		public bool Started;
 
 		string[] audioclips = { "rglight_korean2-0", "rglight_korean3-0", "rglight_korean4-8", "rglight_korean6-0", "rglight_korean7-0" };
+
+		string[] gunclips = { "gunshot1", "gunshot2" };
+
 		float[] times = {2f,3f,4.8f,6f,7f };
+
+		float KillOffPlayersTimer;
 
 		public override void Spawn()
 		{
@@ -36,12 +41,10 @@ namespace terrygame
 			StartRot = Rotation;
 			NoLookRot = StartRot * new Vector3( -1, 0, 0 ).EulerAngles.ToRotation();
 
-			KillOffPlayersTimer = 1.5f;
+			KillOffPlayersTimer = 0.5f;
 
 			WalkDirection = (StartLineCenter - FinishLineCenter).EulerAngles.ToRotation();
 		}
-
-		float KillOffPlayersTimer;
 
 		[Input( Name = "StartRGLightGame" )]
 		public void StartRGLightGame()
@@ -50,6 +53,7 @@ namespace terrygame
 			{
 				Started = true;
 				RotateTime = 0;
+				looking = true;
 			}
 		}
 
@@ -57,12 +61,14 @@ namespace terrygame
 
 		bool looking;
 
+		bool KilledOffLeftoverPlayers;
+
+		List<SquidPlayer> PlayersTokill = new List<SquidPlayer>();
+
 		[Event.Tick]
 		void Tick()
 		{
-			
-
-			if ( !IsServer || !Started)
+			if ( !IsServer || !Started || ((Game.Current as TerryGame).SecondsLeft <= 0 && KilledOffLeftoverPlayers) )
 			{
 				return;
 			}
@@ -74,10 +80,7 @@ namespace terrygame
 
 			if ( (Game.Current as TerryGame).SecondsLeft <= 0 )
 			{
-
-				KillOffPlayersTimer -= Time.Delta;
-
-				if ( KillOffPlayersTimer <= 0 )
+				if (!KilledOffLeftoverPlayers )
 				{
 					foreach ( var player in Entity.All )
 					{
@@ -92,8 +95,13 @@ namespace terrygame
 						{
 							(Game.Current as TerryGame).AddEliminatedPlayer( player.Client.Name.ToString() );
 							(player as SquidPlayer).Eliminated();
+
+							Sound snd = Sound.FromWorld( gunclips[Rand.Int(0,gunclips.Length-1)], Position + (Vector3.Up * (64 * 4)) );
+							snd.SetVolume( 10f );
+							snd.SetPosition( Position + (Vector3.Up * (64 * 4)) );
 						}
 					}
+					KilledOffLeftoverPlayers = true;
 				}
 			}
 
@@ -103,8 +111,6 @@ namespace terrygame
 			{
 				looking = !looking;
 
-				//SetInteractsExclude(CollisionLayer.PLAYER_CLIP)
-
 				SetAnimBool( "looking", looking );
 
 				if ( !GetAnimBool( "active" ) )
@@ -112,10 +118,6 @@ namespace terrygame
 					SetAnimBool( "active", true );
 					Rotation = NoLookRot;
 				}
-
-				
-
-				//Rotation = !looking ? NoLookRot : StartRot;
 
 				if ( !looking )
 				{
@@ -126,26 +128,7 @@ namespace terrygame
 					Sound snd = Sound.FromWorld( audioclips[chosenIndex], Position + (Vector3.Up * (64 * 4)) );
 
 					snd.SetPosition( Position + (Vector3.Up * (64 * 4)) );
-
-
-					/*RotateTime = 2f + Rand.Float() * 4.5f;
-
-					Sound snd = Sound.FromWorld( "rglight_korean4-8", Position + (Vector3.Up * (78 * 4)) );
-
-					float pitchmult = 5.5f / RotateTime;
-
-					float pitchcomp = RotateTime / 5.5f;
-
-					snd.SetPitch( pitchmult );
-					
-					snd.SetVolume( 50f );
-
-					RotateTime -= 1.4f * pitchcomp;
-
-					RotateTime = RotateTime / 2f;*/
-
-					Log.Trace( chosenIndex + " Played!" );
-
+					PlayersTokill.Clear();
 				}
 				else
 				{
@@ -165,28 +148,40 @@ namespace terrygame
 					bool CrossedFinish = Vector3.DistanceBetween(player.Position, FinishLineCenter + WalkDirection.Forward) > Vector3.DistanceBetween( player.Position, FinishLineCenter - WalkDirection.Forward );
 					bool CrossedStart = Vector3.DistanceBetween( player.Position, StartLineCenter + WalkDirection.Forward ) > Vector3.DistanceBetween( player.Position, StartLineCenter - WalkDirection.Forward ); ;
 
-					if ( CrossedStart ) // crossed start line
+					if ( CrossedStart )
 					{
 						Trace LookRay = Trace.Ray( Position + (Vector3.Up * (64 * 4)), ((SquidPlayer)player).headpos );
 
-						//DebugOverlay.Line( Position + (Vector3.Up * (64 * 4)), ((SquidPlayer)player).headpos );
-
 						TraceResult result = LookRay.Run();
-						if ( !CrossedFinish && ((SquidPlayer)player).moving && player.Health > 0 && (result.Entity == player || result.Entity == ((SquidPlayer)player).TerryPuppet) )
+						if ( !CrossedFinish && ((SquidPlayer)player).moving && player.Health > 0 && !((SquidPlayer)player).Died && (result.Entity == player || result.Entity == ((SquidPlayer)player).TerryPuppet) )
 						{
-							//player.Health = -1;
-							//player.OnKilled();
-							(Game.Current as TerryGame).AddEliminatedPlayer(player.Client.Name.ToString());
-							(player as SquidPlayer).Eliminated();
-							
+							if ( !PlayersTokill.Contains( (player as SquidPlayer) ) )
+							{
+								PlayersTokill.Add( (player as SquidPlayer) );
+							}
 						}
-						//Log.Trace( "Player " + player.Owner.NetworkIdent + " crossed the start line! at " + StartLineCenter );
 					}
+				}
 
-					//Log.Trace( "Found Player " + client.Owner.NetworkIdent );
+				KillOffPlayersTimer -= Time.Delta;
+
+				if ( KillOffPlayersTimer <= 0 )
+				{
+					foreach ( var player in PlayersTokill )
+					{
+						(Game.Current as TerryGame).AddEliminatedPlayer( player.Client.Name.ToString() );
+						(player as SquidPlayer).Eliminated();
+
+						int pickedClip = Rand.Int( 0, gunclips.Length - 1 );
+						Sound snd = Sound.FromEntity( gunclips[pickedClip], player );
+
+						
+					}
+					PlayersTokill.Clear();
+
+					KillOffPlayersTimer = Rand.Float();
 				}
 			}
-			//Log.Trace( "TerrybotTick!" );
 		}
 	}
 }

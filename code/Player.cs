@@ -8,13 +8,14 @@ using Sandbox;
 
 namespace terrygame
 {
-	partial class SquidPlayer : Player
+	public partial class SquidPlayer : Player
 	{
 		[Net]
 		ModelEntity suit { get; set; }
 		ModelEntity feet, bottom, hat;
 
-		Clothing.Container clothes = new();
+		[Net]
+		public Clothing.Container clothes { get; set; }
 
 		public Vector3 headpos;
 
@@ -30,18 +31,38 @@ namespace terrygame
 		[Net, Predicted]
 		public TerryPup TerryPuppet { get; set; }
 
+		[Net]
+		public int PlayerNum { get; set; }
+
 		public TerryGame.GameTypes gametype;
 
 		public bool moving;
 
-		WalkControllerVR ControllerRef;
-		StandardPlayerAnimatorVR AnimatorRef;
+		[Net]
+		WalkControllerVR ControllerRef { get; set; }
+
+		[Net]
+		StandardPlayerAnimatorVR AnimatorRef { get; set; }
+
+		PushAbility pushAbility;
+
+		Color[] TeamColors = new Color[] { Color.Red, Color.Green, Color.Blue, Color.Yellow };
+
+		[Net]
+		public bool TeamBased { get; set; }
+
+		[Net]
+		public int TeamsCount { get; set; }
+
+		[Net, Predicted]
+		public AnimEntity Bomb { get; set; }
 
 		public override void Respawn()
 		{
-			SetModel( "models/citizen/citizen.vmdl" );
+			SetModel( "models/citizen/citizen.vmdl" );			
 
 			gametype = (Game.Current as TerryGame).gameType;
+
 			//Log.Trace( gametype );
 
 			EnableTouch = true;
@@ -67,6 +88,9 @@ namespace terrygame
 
 					AnimatorRef = Animator as StandardPlayerAnimatorVR;
 
+					pushAbility = new PushAbility();
+					pushAbility.SetParent( this );
+
 					Camera = new FirstPersonCamera();
 				}
 
@@ -88,6 +112,8 @@ namespace terrygame
 				EnableDrawing = true;
 				EnableHideInFirstPerson = false;
 				EnableShadowInFirstPerson = true;
+
+
 			}
 			else
 			{
@@ -101,12 +127,16 @@ namespace terrygame
 				}
 				else
 				{
-					Controller = new WalkController();
+					Controller = new WalkControllerStairsfix();
 				}
 
 				Animator = new StandardPlayerAnimator();
 
 				Camera = new ThirdPersonCamera();
+
+				pushAbility = new PushAbility();
+				pushAbility.SetParent( this );
+
 
 				EnableAllCollisions = true;
 				EnableDrawing = true;
@@ -117,6 +147,12 @@ namespace terrygame
 
 			if ( suit == null )
 			{
+				/*suit = new ModelEntity();
+				suit.SetModel( "models/clothes/christmassuit.vmdl" );
+				suit.Tags.Add( "suit" );
+				suit.SetParent( this, true );
+				suit.EnableShadowInFirstPerson = true;
+				suit.EnableHideInFirstPerson = true;*/
 
 				suit = new ModelEntity();
 				suit.SetModel( "models/clothes/tracksuit_top.vmdl" );
@@ -124,6 +160,12 @@ namespace terrygame
 				suit.SetParent( this, true );
 				suit.EnableShadowInFirstPerson = true;
 				suit.EnableHideInFirstPerson = true;
+
+				if ( TeamBased )
+				{
+					suit.SetMaterialGroup( 1 );
+					suit.RenderColor = (TeamColors[(PlayerNum - 1) % TeamsCount] * 0.6f).WithAlpha( 1f );
+				}
 
 				bottom = new ModelEntity();
 				bottom.SetModel( "models/clothes/tracksuit_bottom.vmdl" );
@@ -137,6 +179,18 @@ namespace terrygame
 				feet.EnableShadowInFirstPerson = true;
 				feet.EnableHideInFirstPerson = true;
 
+				/*ModelEntity glove = new ModelEntity();
+				glove.SetModel( "models/clothes/bowlingglove_left.vmdl" );
+				glove.SetParent( this, true );
+				glove.EnableShadowInFirstPerson = true;
+				glove.EnableHideInFirstPerson = true;
+
+				glove = new ModelEntity();
+				glove.SetModel( "models/clothes/bowlingglove_right.vmdl" );
+				glove.SetParent( this, true );
+				glove.EnableShadowInFirstPerson = true;
+				glove.EnableHideInFirstPerson = true;*/
+
 				//suit = new ModelEntity();
 				//suit.SetModel( "models/clothes/glassbridge_numberjacket.vmdl" );
 				//suit.Tags.Add( "suit" );
@@ -144,6 +198,7 @@ namespace terrygame
 				//suit.EnableShadowInFirstPerson = true;
 				//suit.EnableHideInFirstPerson = true;
 
+				clothes = new();
 
 				clothes.LoadFromClient(Client);
 
@@ -162,49 +217,10 @@ namespace terrygame
 					clothes.Clothing.Remove( item );
 				}
 
-				clothes.DressEntity( this );
-				
+				if(!Died)
+					clothes.DressEntity( this );
 
-				/*if ( Rand.Int( 0, 3 ) != 1 )
-				{
-					var model = Rand.FromArray( new[]
-					{
-			"models/citizen_clothes/hair/hair_looseblonde/hair_looseblonde.vmdl",
-			"models/citizen_clothes/hair/hair_malestyle02.vmdl",
-			"models/citizen_clothes/hair/hair_looseblonde/hair_looseblonde.vmdl",
-			"models/citizen_clothes/hair/hair_malestyle02.vmdl",
-			"models/citizen_clothes/hair/hair_femalebun.black.vmdl",
-			"models/citizen_clothes/hair/hair_femalebun.blonde.vmdl",
-			"models/citizen_clothes/hair/hair_femalebun.brown.vmdl",
-			"models/citizen_clothes/hair/hair_femalebun.red.vmdl"
-				} );
-
-					hat = new ModelEntity();
-					hat.SetModel( model );
-					hat.SetParent( this, true );
-					hat.EnableShadowInFirstPerson = true;
-					hat.EnableHideInFirstPerson = true;
-				}*/
 			}
-
-			/*if ( Rand.Int( 0, 3 ) != 1 && (hat == null || !hat.Name.Contains("female")))
-			{
-				var model = Rand.FromArray( new[]
-				{
-				"models/citizen_clothes/beards/beard_trucker_black.vmdl",
-				"models/citizen_clothes/beards/beard_trucker_blonde.vmdl",
-				"models/citizen_clothes/beards/beard_trucker_brown.vmdl",
-				"models/citizen_clothes/beards/beard_trucker_ginger.vmdl",
-				"models/citizen_clothes/beards/beard_trucker_white.vmdl",
-				"models/citizen_clothes/beards/moustache.vmdl"
-			} );
-
-				hat = new ModelEntity();
-				hat.SetModel( model );
-				hat.SetParent( this, true );
-				hat.EnableShadowInFirstPerson = true;
-				hat.EnableHideInFirstPerson = true;
-			}*/
 
 			SetBodyGroup( 0, 0 );
 			SetBodyGroup( 1, 1 );
@@ -304,13 +320,6 @@ namespace terrygame
 				}
 			}
 
-			//ResetRotation();
-			//if ( AnimatorRef != null )
-			//AnimatorRef.PlayerRot = Rotation.Identity.Angles();
-
-			//Controller = null;
-
-
 			Camera = new FirstPersonCamera();
 
 			if ( Input.VR.IsActive )
@@ -342,7 +351,87 @@ namespace terrygame
 
 		float TimeSinceFootShuffle;
 
-		bool duckChanged, WasDucked;
+		bool duckChanged, WasDucked, HasPushed;
+
+		VRHud worldPanel;
+
+		//Vector3 lastPosSet;
+
+		public void HandleHands()
+		{
+			if ( LH == null )
+			{
+				return;
+			}
+			LH.Transform = Input.VR.LeftHand.Transform.WithScale( 0.8f );
+			RH.Transform = Input.VR.RightHand.Transform.WithScale( 0.8f );
+
+
+			//LH.Position = Position + Input.VR.LeftHand.Transform.Position;
+
+			if ( Controller == null || Controller.Pawn == null )
+			{
+				return;
+			}
+
+			//LH.Position += Controller.Pawn.Velocity * Time.Delta * 2.25f;
+			//RH.Position += Controller.Pawn.Velocity * Time.Delta * 2.25f;
+
+			LH.SetAnimFloat( "Thumb", Input.VR.LeftHand.GetFingerValue( FingerValue.ThumbCurl ) );
+			LH.SetAnimFloat( "Index", Input.VR.LeftHand.GetFingerValue( FingerValue.IndexCurl ) );
+			LH.SetAnimFloat( "Middle", Input.VR.LeftHand.GetFingerValue( FingerValue.MiddleCurl ) );
+			LH.SetAnimFloat( "Ring", Input.VR.LeftHand.GetFingerValue( FingerValue.RingCurl ) );
+
+			RH.SetAnimFloat( "Thumb", Input.VR.RightHand.GetFingerValue( FingerValue.ThumbCurl ) );
+			RH.SetAnimFloat( "Index", Input.VR.RightHand.GetFingerValue( FingerValue.IndexCurl ) );
+			RH.SetAnimFloat( "Middle", Input.VR.RightHand.GetFingerValue( FingerValue.MiddleCurl ) );
+			RH.SetAnimFloat( "Ring", Input.VR.RightHand.GetFingerValue( FingerValue.RingCurl ) );
+		}
+
+		public void HandleTerryPuppet()
+		{
+			if( TerryPuppet == null )
+			{
+				return;
+			}
+			Transform LocalHead = Transform.ToLocal( Input.VR.Head );
+			TerryPuppet.SetBodyGroup( 3, 1 );
+
+			VR.Scale = 1f;
+
+			TerryPuppet?.SetAnimBool( "b_vr", true );
+
+			Angles puppetAng = Input.VR.Head.Rotation.Angles();
+			puppetAng.roll = 0;
+			puppetAng.pitch = 0;
+
+			if ( Input.VR.Head.Rotation.Forward.z > -0.8f )
+			{
+				DoPuppetRotation( puppetAng.ToRotation() );
+			}
+
+			Vector3 HeadOffset = new Vector3( -10 - (((1 - (LocalHead.Position.z / 65f)) * 3f) * 10f), 0, 0 );
+
+			TerryPuppet.Position = Position + (LocalHead.Position.WithZ( 0 ) * Rotation) + (HeadOffset * TerryPuppet.Rotation);// + LocalHead.Rotation.Forward * 100f;
+
+			TerryPuppet.Position += Controller.Pawn.Velocity * Time.Delta * 2.25f;
+
+			if ( LH != null )
+			{
+
+				TerryPuppet?.SetAnimVector( "left_hand_ik.position", TerryPuppet.Transform.ToLocal( LH.GetBoneTransform( 0 ) ).Position );
+
+				TerryPuppet?.SetAnimVector( "right_hand_ik.position", TerryPuppet.Transform.ToLocal( RH.GetBoneTransform( 0 ) ).Position );
+
+				TerryPuppet?.SetAnimRotation( "left_hand_ik.rotation", TerryPuppet.Transform.ToLocal( LH.GetBoneTransform( 0 ) ).Rotation * new Angles( 0, 0, 180 ).ToRotation() );
+
+				TerryPuppet?.SetAnimRotation( "right_hand_ik.rotation", TerryPuppet.Transform.ToLocal( RH.GetBoneTransform( 0 ) ).Rotation );
+			}
+
+			TerryPuppet?.SetAnimFloat( "duck", (1 - (LocalHead.Position.z / 65f)) * 3f );
+
+			
+		}
 
 		public override void Simulate( Client cl )
 		{
@@ -350,35 +439,38 @@ namespace terrygame
 
 			TimeSinceFootShuffle += Time.Delta;
 
+			if ( TeamBased && suit.IsValid() && !Died)
+			{
+				suit.SetMaterialGroup( 1 );
+				suit.RenderColor = (TeamColors[(PlayerNum - 1) % TeamsCount] * 0.6f).WithAlpha( 1f );
+			}
+
 			if ( IsClient && !Died)
 			{
+				
 				foreach ( var client in Entity.All )
 				{
-					if ( client is not TerryPup && client is not SquidPlayer && !client.Tags.Has( "lh" ) && !client.Tags.Has( "rh" ) )
+					if ( client is not TerryPup && client is not SquidPlayer )
 					{
 						continue;
-					}
-
-					if ( client.Tags.Has( "puppet" ) )
-					{
-						TerryPuppet = (TerryPup)client;
-					}
-
-					if ( client.Tags.Has( "lh" ) )
-					{
-						LH = (AnimEntity)client;
-					}
-					if ( client.Tags.Has( "rh" ) )
-					{
-						RH = (AnimEntity)client;
 					}
 
 					foreach ( Entity ent in client.Children )
 					{
 						if ( ent.Tags.Has( "suit" ) && (ent as ModelEntity).SceneObject != null)
 						{
-							//Log.Trace( "Foundsuit! " + ent.Name );
-							(ent as ModelEntity).SceneObject.SetValue( "pnum", client.Owner.NetworkIdent );
+							//Log.Trace( "Foundsuit! " + client.Owner.NetworkIdent );
+							int number = 0;
+							if( client is SquidPlayer )
+							{
+								number = (client as SquidPlayer).PlayerNum;
+							}
+							else
+							{
+								number = (client as TerryPup).PlayerNum;
+							}
+
+							(ent as ModelEntity).SceneObject.SetValue( "pnum", number );
 							break;
 						}
 					}
@@ -411,11 +503,107 @@ namespace terrygame
 				headpos = GetBoneTransform( "head" ).Position;
 			}
 
+			if ( !Input.VR.IsActive && IsServer )
+			{
+				SetAnimBool( "b_attack", Input.Pressed( InputButton.Attack1 ) );
+				if( Input.Pressed( InputButton.Attack1 ) )
+				{
+					Transform head = GetBoneTransform( "head" );
+					Trace hittest = Trace.Ray( head.Position, head.Position + head.Rotation.Left * 60f ).Ignore( this );
+					TraceResult hitResult = hittest.Run();
+
+					//DebugOverlay.Line( head.Position, head.Position + head.Rotation.Left * 80f );
+
+					if ( (hitResult.Entity as SquidPlayer).IsValid())
+					{
+						SquidPlayer playr = (hitResult.Entity as SquidPlayer);
+						//Log.Trace( "Hit!" );
+						playr.GroundEntity = null;
+						playr.Velocity += Rotation.Forward * 150f + Vector3.Up * 300f;
+
+						if ( Bomb.IsValid() && !playr.Bomb.IsValid() )
+						{
+							Bomb.SetParent( playr, "hand_L" );
+
+							Bomb.LocalPosition = new Vector3( 3f, 0, 5f );
+
+							Bomb.LocalRotation = new Angles( 0, 0, -90 ).ToRotation();
+
+							playr.Bomb = Bomb;
+							Bomb = null;
+						}
+					}
+				}
+
+				if ( Animator != null && Animator.Pawn.IsValid() )
+				{
+					Animator.Pawn.ActiveChild = pushAbility;
+				}
+			}
+
+			if ( IsClient && Input.VR.IsActive)
+			{
+				if ( worldPanel == null )
+				{
+					worldPanel = new VRHud(PlayerNum);
+					worldPanel.Transform = Input.VR.LeftHand.Transform;
+				}
+				worldPanel.Rotation = Input.VR.LeftHand.Transform.Rotation * new Angles( -180, -90, 45 ).ToRotation();
+				worldPanel.Position = Input.VR.LeftHand.Transform.Position + worldPanel.Rotation.Forward * 3f + worldPanel.Rotation.Up * 5f - worldPanel.Rotation.Left * 2f;
+				worldPanel.WorldScale = 0.25f;
+
+				HandleTerryPuppet();
+				HandleHands();
+			}
+
+			if ( Input.VR.IsActive && IsServer )
+			{
+				
+				if ( (Input.VR.RightHand.Velocity.Length > 100f && Vector3.Dot( TerryPuppet.Rotation.Forward, Input.VR.RightHand.Velocity ) > 0) && (Input.VR.LeftHand.Velocity.Length > 100f && Vector3.Dot(TerryPuppet.Rotation.Forward, Input.VR.LeftHand.Velocity ) > 0))
+				{
+					Vector3 avgpos = (Input.VR.LeftHand.Transform.Position + Input.VR.RightHand.Transform.Position) / 2;
+					Vector3 avgnorm = (Input.VR.LeftHand.Velocity.Normal + Input.VR.RightHand.Velocity.Normal) / 2;
+					Trace hittest = Trace.Ray( avgpos, avgpos + avgnorm * 20f ).Ignore( this );
+					TraceResult hitResult = hittest.Run();
+
+					//DebugOverlay.Line( avgpos, avgpos + avgnorm * 30f );
+
+					if ( (hitResult.Entity as SquidPlayer).IsValid() && !HasPushed )
+					{
+						SquidPlayer playr = (hitResult.Entity as SquidPlayer);
+						playr.GroundEntity = null;
+						playr.Velocity += avgnorm * 150f + Vector3.Up * 250f;
+
+						if ( Bomb.IsValid() && !playr.Bomb.IsValid() )
+						{
+							Bomb.SetParent( playr, "hand_L" );
+
+							Bomb.LocalPosition = new Vector3( 3f, 0, 5f );
+
+							Bomb.LocalRotation = new Angles( 0, 0, -90 ).ToRotation();
+
+							playr.Bomb = Bomb;
+							Bomb = null;
+						}
+
+						HasPushed = true;
+					}
+				}
+				else
+				{
+					HasPushed = false;
+				}
+
+				if ( Animator.Pawn != null )
+				{
+					Animator.Pawn.ActiveChild = pushAbility;
+				}
+			}
+
 			if ( IsServer && Input.VR.IsActive && !Died)
 			{
 				moving = Velocity.Length > 3f || Input.VR.LeftHand.Velocity.Length > 10f || Input.VR.RightHand.Velocity.Length > 10f;
 
-				Transform LocalHead = Transform.ToLocal( Input.VR.Head );
 				if ( AnimatorRef == null )
 				{
 					Animator = new StandardPlayerAnimatorVR();
@@ -425,8 +613,10 @@ namespace terrygame
 				if ( TerryPuppet == null )
 				{
 					TerryPuppet = new TerryPup();
+					TerryPuppet.Owner = Client.Pawn;
+					TerryPuppet.PlayerNum = PlayerNum;
 					TerryPuppet.SetModel( "models/citizen/citizen.vmdl" );
-					TerryPuppet.Owner = Local.Pawn;
+					//TerryPuppet.Owner = Local.Pawn;
 					//TerryPuppet.SetParent( Local.Pawn, false );
 					TerryPuppet.Tags.Add( "puppet" );
 					AnimatorRef.TerryPuppet = TerryPuppet;
@@ -434,6 +624,8 @@ namespace terrygame
 					TerryPuppet.EnableHideInFirstPerson = false;
 
 					TerryPuppet.EnableAllCollisions = true;
+
+					TerryPuppet.Predictable = true;
 					
 
 					TerryPuppet.SetBodyGroup( 0, 0 );
@@ -461,6 +653,7 @@ namespace terrygame
 							bottom.EnableHideInFirstPerson = true;
 						}
 
+						if(!Died)
 						clothes.DressEntity( TerryPuppet );
 					}
 				}
@@ -473,23 +666,19 @@ namespace terrygame
 				TerryPuppet.EnableShadowInFirstPerson = true;
 				TerryPuppet.EnableHideInFirstPerson = false;
 
-				if ( LH == null )
+
+
+				if ( Bomb.IsValid() )
 				{
-					LH = new AnimEntity();
-					LH.SetModel( "models/handleft.vmdl" );
-					LH.Scale = 0.8f;
-					LH.Tags.Add( "lh" );
+					Bomb.SetParent( LH,"hold_L");
+					
+					Bomb.LocalPosition = new Vector3( -4f,-7f, 0 );
+
+					Bomb.LocalRotation = new Angles( 45, 0, 0 ).ToRotation();
+
 				}
 
-				if ( RH == null )
-				{
-					RH = new AnimEntity();
-					RH.SetModel( "models/handright.vmdl" );
-					RH.Scale = 0.8f;
-					RH.Tags.Add( "rh" );
-				}
-
-				LH.Transform = Input.VR.LeftHand.Transform.WithScale( 0.8f );
+				/*LH.Transform = Input.VR.LeftHand.Transform.WithScale( 0.8f );
 				RH.Transform = Input.VR.RightHand.Transform.WithScale( 0.8f );
 
 				if(Controller == null || Controller.Pawn == null)
@@ -508,7 +697,8 @@ namespace terrygame
 				RH.SetAnimFloat( "Thumb", Input.VR.RightHand.GetFingerValue( FingerValue.ThumbCurl ) );
 				RH.SetAnimFloat( "Index", Input.VR.RightHand.GetFingerValue( FingerValue.IndexCurl ) );
 				RH.SetAnimFloat( "Middle", Input.VR.RightHand.GetFingerValue( FingerValue.MiddleCurl ) );
-				RH.SetAnimFloat( "Ring", Input.VR.RightHand.GetFingerValue( FingerValue.RingCurl ) );
+				RH.SetAnimFloat( "Ring", Input.VR.RightHand.GetFingerValue( FingerValue.RingCurl ) );*/
+				
 
 				if ( AnimatorRef == null )
 				{
@@ -523,36 +713,29 @@ namespace terrygame
 				EnableDrawing = false;
 				EnableShadowInFirstPerson = false;
 
-				TerryPuppet.SetBodyGroup( 3, 1 );
+				HandleTerryPuppet();
 
-				VR.Scale = 1f;
+				HandleHands();
 
-				TerryPuppet?.SetAnimBool( "b_vr", true );
-
-				Angles puppetAng = Input.VR.Head.Rotation.Angles();
-				puppetAng.roll = 0;
-				puppetAng.pitch = 0;
-
-				if ( Input.VR.Head.Rotation.Forward.z > -0.8f )
+				if ( LH == null )
 				{
-					DoPuppetRotation( puppetAng.ToRotation() );
+					LH = new AnimEntity();
+					LH.Predictable = true;
+					LH.Owner = Client.Pawn;
+					LH.SetModel( "models/handleft.vmdl" );
+					LH.Scale = 0.8f;
+					LH.Tags.Add( "lh" );
 				}
 
-				Vector3 HeadOffset = new Vector3( -10 - (((1 - (LocalHead.Position.z / 65f)) * 3f) * 10f), 0, 0 );
-
-				TerryPuppet.Position = Position + (LocalHead.Position.WithZ( 0 ) * Rotation) + (HeadOffset * TerryPuppet.Rotation);// + LocalHead.Rotation.Forward * 100f;
-
-				TerryPuppet.Position += Controller.Pawn.Velocity * Time.Delta * 2.25f;
-
-				TerryPuppet?.SetAnimVector( "left_hand_ik.position", TerryPuppet.Transform.ToLocal( LH.GetBoneTransform( 0 ) ).Position );
-
-				TerryPuppet?.SetAnimVector( "right_hand_ik.position", TerryPuppet.Transform.ToLocal( RH.GetBoneTransform( 0 ) ).Position );
-
-				TerryPuppet?.SetAnimRotation( "left_hand_ik.rotation", TerryPuppet.Transform.ToLocal( LH.GetBoneTransform( 0 ) ).Rotation * new Angles( 0, 0, 180 ).ToRotation() );
-
-				TerryPuppet?.SetAnimRotation( "right_hand_ik.rotation", TerryPuppet.Transform.ToLocal( RH.GetBoneTransform( 0 ) ).Rotation );
-
-				TerryPuppet?.SetAnimFloat( "duck", (1 - (LocalHead.Position.z / 65f)) * 3f );
+				if ( RH == null )
+				{
+					RH = new AnimEntity();
+					RH.Predictable = true;
+					RH.Owner = Client.Pawn;
+					RH.SetModel( "models/handright.vmdl" );
+					RH.Scale = 0.8f;
+					RH.Tags.Add( "rh" );
+				}
 			}
 		}
 
