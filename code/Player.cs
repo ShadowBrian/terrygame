@@ -582,19 +582,21 @@ namespace terrygame
 				moving = Velocity.Length > 3f || duckChanged;
 				headpos = GetBoneTransform( "head" ).Position;
 
-
-				if ( Bomb.IsValid() )
+				if ( (Game.Current as TerryGame).gameType == TerryGame.GameTypes.BombTag )
 				{
-					(Controller as WalkController).SprintSpeed = 400f;
-					(Controller as WalkControllerVR).DefaultSpeed = 300f;
-					GlowActive = true;
-					GlowColor = Color.Red;
-				}
-				else
-				{
-					(Controller as WalkController).SprintSpeed = 320f;
-					(Controller as WalkController).DefaultSpeed = 190f;
-					GlowActive = false;
+					if ( Bomb.IsValid() )
+					{
+						(Controller as WalkController).SprintSpeed = 400f;
+						(Controller as WalkControllerVR).DefaultSpeed = 300f;
+						GlowActive = true;
+						GlowColor = Color.Red;
+					}
+					else
+					{
+						(Controller as WalkController).SprintSpeed = 320f;
+						(Controller as WalkController).DefaultSpeed = 190f;
+						GlowActive = false;
+					}
 				}
 			}
 
@@ -753,31 +755,33 @@ namespace terrygame
 				TerryPuppet.EnableHideInFirstPerson = false;
 
 
-
-				if ( Bomb.IsValid() )
+				if ( (Game.Current as TerryGame).gameType == TerryGame.GameTypes.BombTag )
 				{
-					(Controller as WalkControllerVR).SprintSpeed = 420f;
-					(Controller as WalkControllerVR).DefaultSpeed = 320f;
-
-					Bomb.SetParent( LH,"hold_L");
-					
-					Bomb.LocalPosition = new Vector3( -4f,-7f, 0 );
-
-					Bomb.LocalRotation = new Angles( 45, 0, 0 ).ToRotation();
-
-					if ( TerryPuppet != null )
+					if ( Bomb.IsValid() )
 					{
-						TerryPuppet.GlowActive = true;
-						GlowColor = Color.Red;
+						(Controller as WalkControllerVR).SprintSpeed = 420f;
+						(Controller as WalkControllerVR).DefaultSpeed = 320f;
+
+						Bomb.SetParent( LH, "hold_L" );
+
+						Bomb.LocalPosition = new Vector3( -4f, -7f, 0 );
+
+						Bomb.LocalRotation = new Angles( 45, 0, 0 ).ToRotation();
+
+						if ( TerryPuppet != null )
+						{
+							TerryPuppet.GlowActive = true;
+							GlowColor = Color.Red;
+						}
 					}
-				}
-				else
-				{
-					(Controller as WalkControllerVR).SprintSpeed = 330f;
-					(Controller as WalkControllerVR).DefaultSpeed = 200f;
-					if ( TerryPuppet != null )
+					else
 					{
-						TerryPuppet.GlowActive = false;
+						(Controller as WalkControllerVR).SprintSpeed = 330f;
+						(Controller as WalkControllerVR).DefaultSpeed = 200f;
+						if ( TerryPuppet != null )
+						{
+							TerryPuppet.GlowActive = false;
+						}
 					}
 				}
 
