@@ -587,7 +587,7 @@ namespace terrygame
 					if ( Bomb.IsValid() )
 					{
 						(Controller as WalkController).SprintSpeed = 400f;
-						(Controller as WalkControllerVR).DefaultSpeed = 300f;
+						(Controller as WalkController).DefaultSpeed = 300f;
 						GlowActive = true;
 						GlowColor = Color.Red;
 					}
