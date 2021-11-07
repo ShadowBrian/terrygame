@@ -117,7 +117,7 @@ namespace terrygame
 						PartOfLowestTeam = true;
 					}
 
-					if ( PartOfLowestTeam )
+					if ( PartOfLowestTeam && !(player as SquidPlayer).Died )
 					{
 						(Game.Current as TerryGame).AddEliminatedPlayer( player.Client.Name.ToString() );
 						(player as SquidPlayer).Eliminated();

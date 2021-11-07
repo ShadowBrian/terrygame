@@ -91,7 +91,7 @@ namespace terrygame
 
 						bool CrossedFinish = Vector3.DistanceBetween( player.Position, FinishLineCenter + WalkDirection.Forward ) > Vector3.DistanceBetween( player.Position, FinishLineCenter - WalkDirection.Forward );
 
-						if ( !CrossedFinish )
+						if ( !CrossedFinish && !(player as SquidPlayer).Died)
 						{
 							(Game.Current as TerryGame).AddEliminatedPlayer( player.Client.Name.ToString() );
 							(player as SquidPlayer).Eliminated();

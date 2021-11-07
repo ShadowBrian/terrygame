@@ -72,7 +72,7 @@ namespace terrygame
 
 					bool PartOfLowestTeam = (((player as SquidPlayer).PlayerNum - 1) % (Game.Current as TerryGame).TeamCount) == LowestTeam;
 
-					if ( PartOfLowestTeam )
+					if ( PartOfLowestTeam && !(player as SquidPlayer).Died )
 					{
 						(Game.Current as TerryGame).AddEliminatedPlayer( player.Client.Name.ToString() );
 						(player as SquidPlayer).Eliminated();
