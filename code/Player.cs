@@ -127,7 +127,7 @@ namespace terrygame
 				}
 				else
 				{
-					Controller = new WalkControllerStairsfix();
+					Controller = new WalkController();
 				}
 
 				Animator = new StandardPlayerAnimator();
@@ -528,9 +528,6 @@ namespace terrygame
 
 			if ( IsClient && !Died)
 			{
-				
-
-
 				foreach ( var client in Entity.All )
 				{
 					if ( client is not TerryPup && client is not SquidPlayer )
@@ -588,11 +585,15 @@ namespace terrygame
 
 				if ( Bomb.IsValid() )
 				{
+					(Controller as WalkController).SprintSpeed = 400f;
+					(Controller as WalkControllerVR).DefaultSpeed = 300f;
 					GlowActive = true;
 					GlowColor = Color.Red;
 				}
 				else
 				{
+					(Controller as WalkController).SprintSpeed = 320f;
+					(Controller as WalkController).DefaultSpeed = 190f;
 					GlowActive = false;
 				}
 			}
@@ -755,6 +756,9 @@ namespace terrygame
 
 				if ( Bomb.IsValid() )
 				{
+					(Controller as WalkControllerVR).SprintSpeed = 420f;
+					(Controller as WalkControllerVR).DefaultSpeed = 320f;
+
 					Bomb.SetParent( LH,"hold_L");
 					
 					Bomb.LocalPosition = new Vector3( -4f,-7f, 0 );
@@ -769,6 +773,8 @@ namespace terrygame
 				}
 				else
 				{
+					(Controller as WalkControllerVR).SprintSpeed = 330f;
+					(Controller as WalkControllerVR).DefaultSpeed = 200f;
 					if ( TerryPuppet != null )
 					{
 						TerryPuppet.GlowActive = false;
