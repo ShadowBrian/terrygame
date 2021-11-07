@@ -103,7 +103,7 @@ namespace Sandbox
 				JustRotated = true;
 				PlayerRot.yaw += 45;
 
-				Log.Trace( "Rotate!" );
+				//Log.Trace( "Rotate!" );
 			}
 
 			if ( RightJoy.x < 0.5f && RightJoy.x > -0.5f && JustRotated )
@@ -116,6 +116,15 @@ namespace Sandbox
 			var idealRotation = Rotation.LookAt( PlayerRot.ToRotation().Forward.WithZ( 0 ), Vector3.Up );
 
 			DoRotation( idealRotation );
+
+			if ( OldHeadPos != Vector3.Zero )
+			{
+				NewHeadPos = localHead.Position * Rotation;
+
+				Position += (OldHeadPos - NewHeadPos);
+
+				OldHeadPos = Vector3.Zero;
+			}
 		}
 
 		public override void Simulate()
@@ -138,8 +147,8 @@ namespace Sandbox
 
 			Transform LocalHead = Pawn.Transform.ToLocal( Input.VR.Head );
 
-			Vector3 aimPos = ((LocalHead.Position * Rotation) + Position) + ((LocalHead.Rotation.Forward * 100) * Rotation);//Pawn.EyePos + Pawn.EyeRot.Forward * 100;
-			Vector3 lookPos = ((LocalHead.Position * Rotation) + Position) + ((LocalHead.Rotation.Forward * 100) * Rotation);
+			Vector3 aimPos = Input.VR.Head.Position + Input.VR.Head.Rotation.Forward * 100;//((LocalHead.Position * Rotation) + Position) + ((LocalHead.Rotation.Forward * 100) * Rotation);//Pawn.EyePos + Pawn.EyeRot.Forward * 100;
+			Vector3 lookPos = Input.VR.Head.Position + Input.VR.Head.Rotation.Forward * 100;
 
 			//
 			// Look in the direction what the player's input is facing

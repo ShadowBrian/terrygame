@@ -9,6 +9,7 @@ namespace terrygame
 	partial class GlassPlate : ModelEntity
 	{
 		public bool breakable;
+
 		public override void Spawn()
 		{
 			base.Spawn();
@@ -26,6 +27,7 @@ namespace terrygame
 		{
 			if (other is SquidPlayer && breakable )
 			{
+				Sound.FromWorld( "glassbreak", Position );
 				Delete();
 			}
 

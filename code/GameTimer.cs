@@ -11,6 +11,9 @@ namespace terrygame
 	[Hammer.EditorModel( "models/timer.vmdl" )]
 	partial class GameTimer : GameTypeBase
 	{
+		[Property( Title = "Gamemode Seconds Timer" )]
+		public float Seconds { get; set; }
+
 		[Net,Change]
 		public int time { get; set; }
 
@@ -20,12 +23,20 @@ namespace terrygame
 
 			SetModel( "models/timer.vmdl" );
 			Tags.Add( "timer" );
+		}
 
+		public override void Initialize()
+		{
+			base.Initialize();
+			if ( Seconds != 0 )
+			{
+				(Game.Current as TerryGame).SecondsLeft = Seconds;
+			}
 		}
 
 		public void OntimeChanged()
 		{
-			if(time <= 10 && time > 0 )
+			if(time <= 5 && time > 0 )
 			{
 				Sound snd = Sound.FromWorld( "beep2", Position );
 			}else if(time == 0 )
@@ -46,9 +57,6 @@ namespace terrygame
 			}
 
 			if( IsClient ) { 
-
-				//Log.Trace( time );
-
 				if ( this.SceneObject != null )
 				{
 					this.SceneObject.SetValue( "pnum", time );

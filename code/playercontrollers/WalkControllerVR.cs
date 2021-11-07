@@ -25,9 +25,10 @@ namespace Sandbox
 		/// </summary>
 		public override BBox GetHull()
 		{
+			Transform LocalHead = Pawn.Transform.ToLocal( Input.VR.Head );
 			var girth = BodyGirth * 0.5f;
-			var mins = new Vector3( -girth, -girth, (GroundEntity == null) ? (BodyHeight/2f) : 0 );
-			var maxs = new Vector3( +girth, +girth, BodyHeight );
+			var mins = new Vector3( -girth, -girth, 0 ) + (LocalHead.Position.WithZ( 0 ) * Rotation);// (GroundEntity == null) ? (BodyHeight/2f) :
+			var maxs = new Vector3( +girth, +girth, BodyHeight ) + (LocalHead.Position.WithZ( 0 ) * Rotation);
 
 			return new BBox( mins, maxs );
 		}
@@ -38,7 +39,7 @@ namespace Sandbox
 		{
 			var girth = BodyGirth * 0.5f;
 
-			BBoxBaseHeight = MathX.LerpTo( BBoxBaseHeight, Climbing ? (BodyHeight / 2f) : 0, 0.1f );
+			BBoxBaseHeight = 0;//MathX.LerpTo( BBoxBaseHeight, Climbing ? (BodyHeight / 2f) : 0, 0.1f );
 
 			Transform LocalHead = Pawn.Transform.ToLocal( Input.VR.Head );
 
@@ -54,6 +55,12 @@ namespace Sandbox
 		bool JustRotated;
 
 		public Vector2 LeftJoy, RightJoy;
+
+		[Event.Tick.Server]
+		public void Tick()
+		{
+			UpdateBBox();
+		}
 
 
 		public override void Simulate()
@@ -255,7 +262,7 @@ namespace Sandbox
 			return DefaultSpeed;
 		}
 
-		public override void CheckLadder()
+		/*public override void CheckLadder()
 		{
 			if ( IsTouchingLadder && Input.VR.RightHand.ButtonA.IsPressed )
 			{
@@ -268,6 +275,50 @@ namespace Sandbox
 			const float ladderDistance = 5.0f;
 			var start = Position;
 			Vector3 end = start + (IsTouchingLadder ? (LadderNormal * -1.0f) : WishVelocity.Normal) * ladderDistance;
+
+			var pm = Trace.Ray( start, end )
+						.Size( mins, maxs )
+						.HitLayer( CollisionLayer.All, false )
+						.HitLayer( CollisionLayer.LADDER, true )
+						.Ignore( Pawn )
+						.Run();
+
+			IsTouchingLadder = false;
+
+			if ( pm.Hit )
+			{
+				IsTouchingLadder = true;
+				LadderNormal = pm.Normal;
+			}
+		}*/
+
+		public override void CheckLadder()
+		{
+			var wishvel = new Vector3( LeftJoy.y, -LeftJoy.x, 0 );
+			wishvel *= Input.VR.Head.Rotation;
+			wishvel = wishvel.Normal;
+
+			if ( IsTouchingLadder )
+			{
+				if ( Input.VR.RightHand.ButtonA.IsPressed )
+				{
+					Velocity = LadderNormal * 100.0f;
+					IsTouchingLadder = false;
+
+					return;
+
+				}
+				else if ( GroundEntity != null && LadderNormal.Dot( wishvel ) > 0 )
+				{
+					IsTouchingLadder = false;
+
+					return;
+				}
+			}
+
+			const float ladderDistance = 1.0f;
+			var start = Position;
+			Vector3 end = start + (IsTouchingLadder ? (LadderNormal * -1.0f) : wishvel) * ladderDistance;
 
 			var pm = Trace.Ray( start, end )
 						.Size( mins, maxs )

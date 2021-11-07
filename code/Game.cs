@@ -62,7 +62,6 @@ namespace terrygame
 			}
 			else
 			{
-				TotalPlayersAlive++;
 				if( playerNumbers.Contains( client.Name ) )
 				{
 					player.PlayerNum = playerNumbers.IndexOf( client.Name ) + 1;
@@ -77,37 +76,14 @@ namespace terrygame
 
 			if(gameType == GameTypes.ColorPanels )
 			{
-				//if(TeamCount == 0 )
-				//{
-					TeamCount = 4;
-				//}
-
-				/*if(playerNumbers.Count > 0 )
-				{
-					if ( playerNumbers.Count % 4 == 0 && playerNumbers.Count >= 12 )
-					{
-						TeamCount = 4;
-					}
-					if (playerNumbers.Count % 3 == 0)
-					{
-						TeamCount = 3;
-					}
-					if ( playerNumbers.Count % 2 == 0 && playerNumbers.Count <= 10)
-					{
-						TeamCount = 2;
-					}
-				}*/
-
-
-
-				//TeamCount = 4;
+				TeamCount = Math.Clamp(TotalPlayersAlive,1,4);
 
 				player.TeamsCount = TeamCount;
 
 				player.TeamBased = true;
 			}
 
-			Log.Trace( "Players alive: " + TotalPlayersAlive );
+			//Log.Trace( "Players alive: " + TotalPlayersAlive );
 
 			foreach ( GameTypeBase gameObject in GameAssets )
 			{
@@ -116,27 +92,18 @@ namespace terrygame
 
 			player.Respawn();
 
-			//if(client.IsUsingVr)
-
-			if(gameType == GameTypes.BombTag && Rand.Float(0,100f) > 50f && !player.Died)
+			if(gameType == GameTypes.BombTag && Rand.Float(0,100f) > 50f && !player.Died && bombs.Count <= MathF.Ceiling(TotalPlayersAlive/2f))
 			{
 				AnimEntity bombEnt = new AnimEntity();
 				bombEnt.SetModel( "models/bombtag_bomb.vmdl" );
 				bombEnt.SetParent( player, "hand_L" );
-				//bombEnt.Position = Vector3.Zero;
 
 
 				bombEnt.LocalPosition = new Vector3(3f,0,5f);
 
 				bombEnt.LocalRotation = new Angles( 0, 0, -90 ).ToRotation();
 
-
 				//Particles sparks = Particles.Create( "particles/fuse_sparks.vpcf", bombEnt );
-
-				//player.GetAttachment( "hold_R" ).Value.Position;
-				//bombEnt.LocalPosition += bombEnt.Transform.Rotation.Right * 20;
-
-				//bombEnt.Rotation = player.GetAttachment( "hold_L" ).Value.Rotation;
 
 				bombs.Add( bombEnt );
 
@@ -167,6 +134,10 @@ namespace terrygame
 			{
 				eliminatedPlayers = FileSystem.Data.ReadAllText( "tempfiles/Eliminations.txt" ).Split(",").ToList();
 			}
+			else
+			{
+				eliminatedPlayers = new List<string>();
+			}
 		}
 
 		public void CheckPlayerNumbers()
@@ -174,12 +145,47 @@ namespace terrygame
 			if ( FileSystem.Data.FileExists( "tempfiles/Numbers.txt" ) )
 			{
 				playerNumbers = FileSystem.Data.ReadAllText( "tempfiles/Numbers.txt" ).Split( "," ).ToList();
+
+				TotalPlayersAlive = playerNumbers.Count - eliminatedPlayers.Count;
 			}
 		}
 
 		public void UpdateNumberFile()
 		{
 			FileSystem.Data.WriteAllText( "tempfiles/Numbers.txt", String.Join( ",", playerNumbers ) );
+		}
+
+		public void RespawnPlayers()
+		{
+			Global.ChangeLevel( LevelPlaylist[currentMap].Split( "," )[0] );
+		}
+
+		[AdminCmd( "tg_reset" )]
+		public static void ResetAndRespawnPlayers()
+		{
+			if ( FileSystem.Data.FileExists( "tempfiles/CurrentMap.txt" ) )
+			{
+				FileSystem.Data.DeleteFile( "tempfiles/CurrentMap.txt" );
+			}
+			if ( FileSystem.Data.FileExists( "tempfiles/Eliminations.txt" ) )
+			{
+				FileSystem.Data.DeleteFile( "tempfiles/Eliminations.txt" );
+			}
+			if ( FileSystem.Data.FileExists( "tempfiles/Numbers.txt" ) )
+			{
+				FileSystem.Data.DeleteFile( "tempfiles/Numbers.txt" );
+			}
+			FileSystem.Data.CreateDirectory( "tempfiles" );
+			(Game.Current as TerryGame).CheckEliminatedPlayers();
+			(Game.Current as TerryGame).ConfigureLevelPlaylist();
+			(Game.Current as TerryGame).CheckPlayerNumbers();
+			(Game.Current as TerryGame).RespawnPlayers();
+		}
+
+		public override void DoPlayerNoclip( Client player )
+		{
+			//base.DoPlayerNoclip( player );
+			//DoPlayerSuicide( player );
 		}
 
 		public override void Shutdown()
@@ -234,7 +240,7 @@ namespace terrygame
 			}
 			else
 			{
-				FileSystem.Data.WriteAllText( "LevelPlaylist.txt", "tg_rglight_courtyard,120\ntg_colorpanels,120\ntg_bombtag,60\ntg_glassbridge,120" );
+				FileSystem.Data.WriteAllText( "LevelPlaylist.txt", "tg_rglight_courtyard\ntg_koth\ntg_colorpanels\ntg_bombtag\ntg_glassbridge" );
 
 				//tg_colorpanels,120
 				//tg_bombtag,60
@@ -307,6 +313,7 @@ namespace terrygame
 					{
 						FileSystem.Data.WriteAllText( "tempfiles/CurrentMap.txt", (currentMap + 1).ToString() );
 						Global.ChangeLevel( LevelPlaylist[currentMap + 1].Split( "," )[0] );
+						
 					}
 					else
 					{
@@ -373,7 +380,7 @@ namespace terrygame
 			ConfigureLevelPlaylist();
 			CheckPlayerNumbers();
 
-			SecondsLeft = float.Parse( LevelPlaylist[currentMap].Split( "," )[1] );
+			//SecondsLeft = float.Parse( LevelPlaylist[currentMap].Split( "," )[1] );
 
 			foreach (Entity ent in Entity.All.OfType<GameTypeBase>())
 			{
@@ -416,6 +423,12 @@ namespace terrygame
 					{
 						gameType = GameTypes.BombTag;
 						Log.Trace( "Found BombTagManager! Setting gametype to " + gameType.ToString() );
+					}
+
+					if ( ent is KingOfTheHillManager )
+					{
+						gameType = GameTypes.KingOfTheHill;
+						Log.Trace( "Found KingOfTheHillManager! Setting gametype to " + gameType.ToString() );
 					}
 				}
 			}

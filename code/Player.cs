@@ -164,7 +164,7 @@ namespace terrygame
 				if ( TeamBased )
 				{
 					suit.SetMaterialGroup( 1 );
-					suit.RenderColor = (TeamColors[(PlayerNum - 1) % TeamsCount] * 0.6f).WithAlpha( 1f );
+					suit.RenderColor = (TeamColors[(PlayerNum) % (Game.Current as TerryGame).TeamCount] * 0.6f).WithAlpha( 1f );
 				}
 
 				bottom = new ModelEntity();
@@ -349,11 +349,73 @@ namespace terrygame
 			
 		}
 
+		public void UnDied()
+		{
+			EnableAllCollisions = true;
+			EnableDrawing = true;
+
+			if ( Input.VR.IsActive )
+			{
+				if ( gametype == TerryGame.GameTypes.RGLight )
+				{
+					Controller = new WalkControllerVRRGLight();
+					ControllerRef = Controller as WalkControllerVRRGLight;
+				}
+				else
+				{
+					Controller = new WalkControllerVR();
+					ControllerRef = Controller as WalkControllerVR;
+				}
+			}
+			else
+			{
+				Camera = new ThirdPersonCamera();
+			}
+
+			if ( TerryPuppet != null )
+			{
+				TerryPuppet.EnableDrawing = true;
+			}
+
+			if ( LH != null )
+			{
+				LH.EnableDrawing = true;
+			}
+
+			if ( RH != null )
+			{
+				RH.EnableDrawing = true;
+			}
+			Died = false;
+		}
+
 		float TimeSinceFootShuffle;
 
 		bool duckChanged, WasDucked, HasPushed;
 
 		VRHud worldPanel;
+
+		public override void FrameSimulate( Client cl )
+		{
+			if (Input.VR.IsActive )
+			{
+				HandleHands();
+				HandleTerryPuppet();
+				if ( worldPanel == null )
+				{
+					worldPanel = new VRHud( PlayerNum );
+					worldPanel.Transform = Input.VR.LeftHand.Transform;
+				}
+				worldPanel.Rotation = Input.VR.LeftHand.Transform.Rotation * new Angles( -180, -90, 45 ).ToRotation();
+				worldPanel.Position = Input.VR.LeftHand.Transform.Position + worldPanel.Rotation.Forward * 3f + worldPanel.Rotation.Up * 5f - worldPanel.Rotation.Left * 2f;
+				worldPanel.WorldScale = 0.25f;
+
+				//HandleTerryPuppet();
+				//HandleHands();
+			}
+
+			base.FrameSimulate( cl );
+		}
 
 		//Vector3 lastPosSet;
 
@@ -405,7 +467,7 @@ namespace terrygame
 			puppetAng.roll = 0;
 			puppetAng.pitch = 0;
 
-			if ( Input.VR.Head.Rotation.Forward.z > -0.8f )
+			if ( Input.VR.Head.Rotation.Forward.z > -0.95f )
 			{
 				DoPuppetRotation( puppetAng.ToRotation() );
 			}
@@ -416,9 +478,31 @@ namespace terrygame
 
 			TerryPuppet.Position += Controller.Pawn.Velocity * Time.Delta * 2.25f;
 
+			
+
+			HandleTerryIK();
+
+			TerryPuppet?.SetAnimFloat( "duck", (1 - (LocalHead.Position.z / 65f)) * 3f );
+
+			
+		}
+
+		[Event.Physics.PreStep]
+		public void PrePhys()
+		{
+			HandleTerryIK();
+		}
+
+		[Event.Physics.PostStep]
+		public void PostPhys()
+		{
+			HandleTerryIK();
+		}
+
+		public void HandleTerryIK()
+		{
 			if ( LH != null )
 			{
-
 				TerryPuppet?.SetAnimVector( "left_hand_ik.position", TerryPuppet.Transform.ToLocal( LH.GetBoneTransform( 0 ) ).Position );
 
 				TerryPuppet?.SetAnimVector( "right_hand_ik.position", TerryPuppet.Transform.ToLocal( RH.GetBoneTransform( 0 ) ).Position );
@@ -427,10 +511,6 @@ namespace terrygame
 
 				TerryPuppet?.SetAnimRotation( "right_hand_ik.rotation", TerryPuppet.Transform.ToLocal( RH.GetBoneTransform( 0 ) ).Rotation );
 			}
-
-			TerryPuppet?.SetAnimFloat( "duck", (1 - (LocalHead.Position.z / 65f)) * 3f );
-
-			
 		}
 
 		public override void Simulate( Client cl )
@@ -441,13 +521,16 @@ namespace terrygame
 
 			if ( TeamBased && suit.IsValid() && !Died)
 			{
+				TeamsCount = (Game.Current as TerryGame).TeamCount;
 				suit.SetMaterialGroup( 1 );
-				suit.RenderColor = (TeamColors[(PlayerNum - 1) % TeamsCount] * 0.6f).WithAlpha( 1f );
+				suit.RenderColor = (TeamColors[(PlayerNum) % TeamsCount] * 0.6f).WithAlpha( 1f );
 			}
 
 			if ( IsClient && !Died)
 			{
 				
+
+
 				foreach ( var client in Entity.All )
 				{
 					if ( client is not TerryPup && client is not SquidPlayer )
@@ -478,8 +561,8 @@ namespace terrygame
 				if ( TerryPuppet != null && LH != null && RH != null )
 				{
 					TerryPuppet.SetBone( "head", TerryPuppet.GetBoneTransform( "head" ).WithScale( 0 ) );
-					TerryPuppet.SetBone( "hand_L", TerryPuppet.GetBoneTransform( "hand_L" ).WithPosition( LH.GetBoneTransform( 0 ).Position ).WithRotation( LH.GetBoneTransform( 0 ).Rotation * new Angles( 0, 0, 180 ).ToRotation() ) );
-					TerryPuppet.SetBone( "hand_R", TerryPuppet.GetBoneTransform( "hand_R" ).WithPosition( RH.GetBoneTransform( 0 ).Position ).WithRotation( RH.GetBoneTransform( 0 ).Rotation ) );
+					//TerryPuppet.SetBone( "hand_L", TerryPuppet.GetBoneTransform( "hand_L" ).WithPosition( LH.GetBoneTransform( 0 ).Position ).WithRotation( LH.GetBoneTransform( 0 ).Rotation * new Angles( 0, 0, 180 ).ToRotation() ) );
+					//TerryPuppet.SetBone( "hand_R", TerryPuppet.GetBoneTransform( "hand_R" ).WithPosition( RH.GetBoneTransform( 0 ).Position ).WithRotation( RH.GetBoneTransform( 0 ).Rotation ) );
 
 					//TerryPuppet.SetBone( "hand_L", TerryPuppet.GetBoneTransform( "hand_L" ).WithPosition( LH.GetBoneTransform( 0 ).Position ) );
 					//TerryPuppet.SetBone( "hand_R", TerryPuppet.GetBoneTransform( "hand_R" ).WithPosition( RH.GetBoneTransform( 0 ).Position ) );
@@ -501,6 +584,17 @@ namespace terrygame
 				WasDucked = Input.Down( InputButton.Duck );
 				moving = Velocity.Length > 3f || duckChanged;
 				headpos = GetBoneTransform( "head" ).Position;
+
+
+				if ( Bomb.IsValid() )
+				{
+					GlowActive = true;
+					GlowColor = Color.Red;
+				}
+				else
+				{
+					GlowActive = false;
+				}
 			}
 
 			if ( !Input.VR.IsActive && IsServer )
@@ -519,7 +613,7 @@ namespace terrygame
 						SquidPlayer playr = (hitResult.Entity as SquidPlayer);
 						//Log.Trace( "Hit!" );
 						playr.GroundEntity = null;
-						playr.Velocity += Rotation.Forward * 150f + Vector3.Up * 300f;
+						playr.Velocity += Rotation.Forward * 200f * ((Game.Current as TerryGame).gameType == TerryGame.GameTypes.KingOfTheHill?2f:1f) + Vector3.Up * 200f;
 
 						if ( Bomb.IsValid() && !playr.Bomb.IsValid() )
 						{
@@ -541,21 +635,6 @@ namespace terrygame
 				}
 			}
 
-			if ( IsClient && Input.VR.IsActive)
-			{
-				if ( worldPanel == null )
-				{
-					worldPanel = new VRHud(PlayerNum);
-					worldPanel.Transform = Input.VR.LeftHand.Transform;
-				}
-				worldPanel.Rotation = Input.VR.LeftHand.Transform.Rotation * new Angles( -180, -90, 45 ).ToRotation();
-				worldPanel.Position = Input.VR.LeftHand.Transform.Position + worldPanel.Rotation.Forward * 3f + worldPanel.Rotation.Up * 5f - worldPanel.Rotation.Left * 2f;
-				worldPanel.WorldScale = 0.25f;
-
-				HandleTerryPuppet();
-				HandleHands();
-			}
-
 			if ( Input.VR.IsActive && IsServer )
 			{
 				
@@ -572,7 +651,7 @@ namespace terrygame
 					{
 						SquidPlayer playr = (hitResult.Entity as SquidPlayer);
 						playr.GroundEntity = null;
-						playr.Velocity += avgnorm * 150f + Vector3.Up * 250f;
+						playr.Velocity += avgnorm * 200f * ((Game.Current as TerryGame).gameType == TerryGame.GameTypes.KingOfTheHill ? 2f : 1f) + Vector3.Up * 200f;
 
 						if ( Bomb.IsValid() && !playr.Bomb.IsValid() )
 						{
@@ -598,6 +677,12 @@ namespace terrygame
 				{
 					Animator.Pawn.ActiveChild = pushAbility;
 				}
+			}
+
+			if ( Input.VR.IsActive && IsClient )
+			{
+				HandleHands();
+				HandleTerryPuppet();
 			}
 
 			if ( IsServer && Input.VR.IsActive && !Died)
@@ -676,6 +761,18 @@ namespace terrygame
 
 					Bomb.LocalRotation = new Angles( 45, 0, 0 ).ToRotation();
 
+					if ( TerryPuppet != null )
+					{
+						TerryPuppet.GlowActive = true;
+						GlowColor = Color.Red;
+					}
+				}
+				else
+				{
+					if ( TerryPuppet != null )
+					{
+						TerryPuppet.GlowActive = false;
+					}
 				}
 
 				/*LH.Transform = Input.VR.LeftHand.Transform.WithScale( 0.8f );

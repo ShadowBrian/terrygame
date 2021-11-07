@@ -23,9 +23,11 @@ namespace Sandbox
 		/// </summary>
 		public override BBox GetHull()
 		{
+			Transform LocalHead = Pawn.Transform.ToLocal( Input.VR.Head );
+
 			var girth = BodyGirth * 0.5f;
-			var mins = new Vector3( -girth, -girth, (GroundEntity == null) ? (BodyHeight/2f) : 0 );
-			var maxs = new Vector3( +girth, +girth, BodyHeight );
+			var mins = new Vector3( -girth, -girth, (GroundEntity == null) ? (BodyHeight/2f) : 0 ) + (LocalHead.Position.WithZ( 0 ) * Rotation);
+			var maxs = new Vector3( +girth, +girth, BodyHeight ) + (LocalHead.Position.WithZ( 0 ) * Rotation);
 
 			return new BBox( mins, maxs );
 		}

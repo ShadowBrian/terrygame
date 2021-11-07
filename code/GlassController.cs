@@ -25,9 +25,11 @@ namespace terrygame
 
 		Rotation SpawnDirection;
 
-		public override void Initialize()
+		
+
+		public override void Spawn()
 		{
-			base.Initialize();
+			base.Spawn();
 
 			if( plates.Count > 0)
 			{
@@ -65,10 +67,12 @@ namespace terrygame
 				if(Rand.Float() > 0.5f )
 				{
 					plate1.breakable = true;
+					plate2.RenderColor = new Color( 0.95f, 0.9f, 1f, 1f );
 				}
 				else
 				{
 					plate2.breakable = true;
+					plate1.RenderColor = new Color( 0.95f, 0.9f, 1f, 1f );
 				}
 			}
 

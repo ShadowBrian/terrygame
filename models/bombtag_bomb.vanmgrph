@@ -69,7 +69,7 @@
 				{
 					m_id = 802566130
 				}
-				m_networkMode = "ServerAuthoritative"
+				m_networkMode = "ClientSimulate"
 				m_sNote = ""
 				m_childID = 
 				{
@@ -91,7 +91,7 @@
 				{
 					m_id = 982671486
 				}
-				m_networkMode = "ServerAuthoritative"
+				m_networkMode = "ClientSimulate"
 				m_sNote = ""
 				m_sequenceName = "bombtag_bomb"
 				m_nFrameIndex = 0
@@ -111,7 +111,7 @@
 				{
 					m_id = 1239210542
 				}
-				m_networkMode = "ServerAuthoritative"
+				m_networkMode = "ClientSimulate"
 				m_sNote = ""
 				m_childID = 
 				{

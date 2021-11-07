@@ -527,17 +527,31 @@ namespace Sandbox
 
 		public virtual void CheckLadder()
 		{
-			if ( IsTouchingLadder && Input.Pressed( InputButton.Jump ) )
-			{
-				Velocity = LadderNormal * 100.0f;
-				IsTouchingLadder = false;
+			var wishvel = new Vector3( Input.Forward, Input.Left, 0 );
+			wishvel *= Input.Rotation;
+			wishvel = wishvel.Normal;
 
-				return;
+			if ( IsTouchingLadder )
+			{
+				if ( Input.Pressed( InputButton.Jump ) )
+				{
+					Velocity = LadderNormal * 100.0f;
+					IsTouchingLadder = false;
+
+					return;
+
+				}
+				else if ( GroundEntity != null && LadderNormal.Dot( wishvel ) > 0 )
+				{
+					IsTouchingLadder = false;
+
+					return;
+				}
 			}
 
-			const float ladderDistance = 4.0f;
+			const float ladderDistance = 1.0f;
 			var start = Position;
-			Vector3 end = start + (IsTouchingLadder ? (LadderNormal * -1.0f) : WishVelocity.Normal) * ladderDistance;
+			Vector3 end = start + (IsTouchingLadder ? (LadderNormal * -1.0f) : wishvel) * ladderDistance;
 
 			var pm = Trace.Ray( start, end )
 						.Size( mins, maxs )

@@ -17,6 +17,8 @@ namespace terrygame
 
 		Color[] TeamColors = new Color[] { Color.Red, Color.Green, Color.Blue, Color.Yellow };
 
+		string[] gunclips = { "gunshot1", "gunshot2" };
+
 		public override void Initialize()
 		{
 			(Game.Current as TerryGame).StartedCountdown = true;
@@ -53,7 +55,7 @@ namespace terrygame
 
 				for ( int i = 0; i < TeamScores.Count; i++ )
 				{
-					if(TeamScores[i] < PanelCheck )
+					if(TeamScores[i] < PanelCheck && TeamScores[i] != 0)
 					{
 						PanelCheck = TeamScores[i];
 						LowestTeam = i;
@@ -74,6 +76,8 @@ namespace terrygame
 					{
 						(Game.Current as TerryGame).AddEliminatedPlayer( player.Client.Name.ToString() );
 						(player as SquidPlayer).Eliminated();
+
+						Sound.FromEntity( gunclips[Rand.Int( 0, gunclips.Length - 1 )], player );
 					}
 				}
 

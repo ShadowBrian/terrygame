@@ -48,6 +48,7 @@
 //
 @PointClass base(BaseProperties_terrygame) editormodel( "models/timer.vmdl" ) = terrygame_timer : "Generic Timer"
 [
+	seconds(float) : "Gamemode Seconds Timer" : 0 : ""
 	enable_shadows(boolean) { group = "Rendering" } : "Shadow Casting" : 1 : "Whether this entity should cast shadows or not"
 
 	input SetColor(string) : "Sets the color of this entity. Format is '255 255 255 255'."
@@ -70,6 +71,27 @@
 // terrygame.GlassNumberStatueManager
 //
 @PointClass base(BaseProperties_terrygame) editormodel( "models/arrow.vmdl" ) = terrygame_glassnumbermanager : "Glass bridge game number statue spawner"
+[
+	enable_shadows(boolean) { group = "Rendering" } : "Shadow Casting" : 1 : "Whether this entity should cast shadows or not"
+
+	input SetColor(string) : "Sets the color of this entity. Format is '255 255 255 255'."
+]
+
+//
+// terrygame.JumpPad
+//
+@PointClass base(BaseProperties_terrygame) editormodel( "models/jumppad.vmdl" ) = terrygame_jumppad : "Jump Pad"
+[
+	jumpforce(float) : "Jump Force" : 0 : ""
+	enable_shadows(boolean) { group = "Rendering" } : "Shadow Casting" : 1 : "Whether this entity should cast shadows or not"
+
+	input SetColor(string) : "Sets the color of this entity. Format is '255 255 255 255'."
+]
+
+//
+// terrygame.KingOfTheHillManager
+//
+@PointClass base(BaseProperties_terrygame) editormodel( "models/kothfield.vmdl" ) = terrygame_kingofthehill : "koth point"
 [
 	enable_shadows(boolean) { group = "Rendering" } : "Shadow Casting" : 1 : "Whether this entity should cast shadows or not"
 
